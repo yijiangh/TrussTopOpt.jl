@@ -1,0 +1,4 @@
+name = "TrussTopOpt"
+uuid = "3b0f71d7-a2fe-4103-99dc-440e27a7d22c"
+authors = ["Yijiang Huang <yijiangh@mit.edu>"]
+version = "0.1.0"
