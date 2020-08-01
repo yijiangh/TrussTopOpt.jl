@@ -2,3 +2,18 @@ name = "TrussTopOpt"
 uuid = "3b0f71d7-a2fe-4103-99dc-440e27a7d22c"
 authors = ["Yijiang Huang <yijiangh@mit.edu>"]
 version = "0.1.0"
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+JuAFEM = "30d91d44-8115-11e8-1d28-c19a5ac16de8"
+KissThreading = "ece10b52-bc5d-5f9f-8b6e-cc9c6a4b5293"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TopOpt = "53a1e1a5-51bb-58a9-8a02-02056cc81109"
+VTKDataTypes = "10d27dd1-1d0f-5a4c-b178-bd2d0045a217"

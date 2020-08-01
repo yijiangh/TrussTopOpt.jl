@@ -1,0 +1,25 @@
+{
+  "applied_shape_file": "tim.json",
+  "dimension": 2,
+  "node_num": 19,
+  "element_num": 42,
+  "force_unit": "kN",
+  "moment_unit": "kN-m",
+  "include_self_weight": false,
+  "point_load_list": [
+    {
+      "node_id": 19,
+      "force": [-350, 0]
+    }
+  ],
+  "support_node_list": [
+    {
+      "node_id": 1,
+      "fixities": [1, 1]
+    },
+    {
+      "node_id": 2,
+      "fixities": [1, 1]
+    }
+  ]
+}

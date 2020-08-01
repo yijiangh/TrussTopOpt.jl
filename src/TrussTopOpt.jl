@@ -1,5 +1,10 @@
 module TrussTopOpt
 
-greet() = print("Hello World!")
+using Reexport
+
+# Topopology optimization problem definitions
+include(joinpath("TrussTopOptProblems", "TrussTopOptProblems.jl"))
+
+@reexport using .TrussTopOptProblems
 
 end # module
