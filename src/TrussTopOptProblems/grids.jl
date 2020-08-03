@@ -1,6 +1,8 @@
+using TopOpt.TopOptProblems: AbstractGrid
+
 const Vec = JuAFEM.Vec
 
-struct TrussGrid{dim, T, N, M, TG<:JuAFEM.Grid{dim, N, T, M}} <: TopOpt.TopOptProblems.AbstractGrid{dim, T}
+struct TrussGrid{dim, T, N, M, TG<:JuAFEM.Grid{dim, N, T, M}} <: AbstractGrid{dim, T}
     grid::TG
     white_cells::BitVector
     black_cells::BitVector
@@ -17,7 +19,7 @@ nnodes(cell::Type{JuAFEM.Cell{dim,N,M}}) where {dim, N, M} = N
 nnodes(cell::JuAFEM.Cell) = nnodes(typeof(cell))
 
 function TrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-        forces::Dict{iT, SVector{dim, T}}, boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
+        boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
     # ::Type{Val{CellType}}, 
     # if CellType === :Linear
     #     geoshape = Line
@@ -26,13 +28,13 @@ function TrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tu
     #     # geoshape = QuadraticQuadrilateral
     # end
 
-    grid = _LinearTrussGrid(node_points, elements, forces, boundary)
+    grid = _LinearTrussGrid(node_points, elements, boundary)
     ncells = getncells(grid)
     return TrussGrid(grid, falses(ncells), falses(ncells), falses(ncells))
 end
 
 function _LinearTrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-        forces::Dict{iT, SVector{dim, T}}, boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
+        boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
     n_nodes = length(node_points)
     TrussLine = Cell{dim,2,2}
     # * Generate cells
@@ -43,13 +45,8 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict
 
     # * Generate nodes
     nodes = Node{dim,T}[]
-    nodesets = Dict{String, Set{Int}}()
-    nodesets["load"] = Set{Int}()
     for kval in node_points
         push!(nodes, Node((kval[2]...,)))
-    end
-    for (k,_) in forces
-        push!(nodesets["load"], k)
     end
 
     # * label boundary (cell, face)
@@ -66,7 +63,7 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict
     # facesets = Dict("left"  => Set{Tuple{Int,Int}}([boundary[1]]),
     #                 "right" => Set{Tuple{Int,Int}}([boundary[2]]))
 
-    return Grid(cells, nodes, nodesets=nodesets, boundary_matrix=boundary_matrix)
+    return Grid(cells, nodes, boundary_matrix=boundary_matrix)
 end
 
 function node_neighbors(cells)
