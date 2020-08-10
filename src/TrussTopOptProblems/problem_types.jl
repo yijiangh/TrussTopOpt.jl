@@ -7,7 +7,7 @@ using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
     ch::ConstraintHandler{<:DofHandler{dim, N, T, M}, T}
     black::AbstractVector
     white::AbstractVector
-    varind::AbstractVector{Int}
+    varind::AbstractVector{Int} # full dof -> free dof, based on black & white
     metadata::Metadata
 end
 

@@ -37,6 +37,8 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict
         boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
     n_nodes = length(node_points)
     TrussLine = Cell{dim,2,2}
+    # TrussLine = Line
+
     # * Generate cells
     cells = TrussLine[]
     for e in elements

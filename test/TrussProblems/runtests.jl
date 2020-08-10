@@ -16,16 +16,28 @@ load_supp_file = joinpath(ins_dir, "tim_load_support_case.json")
 ndim, n, m, node_points, elements = parse_truss_json(truss_file)
 loads, boundary = parse_support_load_json(load_supp_file)
 
-# tgrid = TrussGrid(node_points, elements, boundary)
+tgrid = TrussGrid(node_points, elements, boundary)
 # # @test JuAFEM.getnnodes(tgrid.grid) == n
 # # @test JuAFEM.getncells(tgrid.grid) == m
+
+fieldnames(typeof(tgrid))
+getcoordinates(tgrid.grid.nodes[1])
+nfaces(tgrid.grid.cells[1])
+JuAFEM.nnodes(tgrid.grid.cells[1])
+
+dim = typeof(tgrid.grid.cells[1]).parameters[1]
+
+Line
+
+@show JuAFEM.celltypes
+
 # dh = DofHandler(tgrid.grid)
 # dim = 2
 # ip = Lagrange{dim,RefCube,1}()
 # BCValues(ip, default_interpolation(getcelltype(dh.grid))
 # push!(dh, :u, dim, ip)
 
-tproblem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary)
+# tproblem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary)
 
 ##########################################
 

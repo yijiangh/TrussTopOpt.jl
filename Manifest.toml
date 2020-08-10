@@ -138,11 +138,23 @@ version = "1.0.1"
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
+[[Distributions]]
+deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "536ae0f40b0f6ed8cf5300f491a243fcf88b5ae4"
+uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
+version = "0.23.6"
+
 [[DocStringExtensions]]
 deps = ["LibGit2", "Markdown", "Pkg", "Test"]
 git-tree-sha1 = "c5714d9bcdba66389612dc4c47ed827c64112997"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.2"
+
+[[Documenter]]
+deps = ["Base64", "Dates", "DocStringExtensions", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "REPL", "Test", "Unicode"]
+git-tree-sha1 = "1c593d1efa27437ed9dd365d1143c594b563e138"
+uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+version = "0.25.1"
 
 [[ExprTools]]
 git-tree-sha1 = "6f0517056812fd6aa3af23d4b70d5325a2ae4e95"
@@ -404,6 +416,12 @@ git-tree-sha1 = "293b70ac1780f9584c89268a6e2a560d938a7065"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.3.0"
 
+[[PDMats]]
+deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse", "Test"]
+git-tree-sha1 = "b3405086eb6a974eba1958923d46bc0e1c2d2d63"
+uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
+version = "0.10.0"
+
 [[Parameters]]
 deps = ["OrderedCollections", "UnPack"]
 git-tree-sha1 = "38b2e970043613c187bd56a995fe2e551821eb4a"
@@ -439,6 +457,12 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 [[Profile]]
 deps = ["Printf"]
 uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+
+[[QuadGK]]
+deps = ["DataStructures", "LinearAlgebra"]
+git-tree-sha1 = "0ab8a09d4478ebeb99a706ecbf8634a65077ccdc"
+uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+version = "2.4.0"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]
@@ -564,6 +588,10 @@ git-tree-sha1 = "8099ed9fb90b6e754d6ba8c6ed8670f010eadca0"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 version = "0.4.4"
 
+[[SuiteSparse]]
+deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
+uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
+
 [[TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
 git-tree-sha1 = "b1ad568ba658d8cbb3b892ed5380a6f3e781a81e"
@@ -599,8 +627,8 @@ uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 version = "0.5.6"
 
 [[TopOpt]]
-deps = ["CatViews", "Compat", "FillArrays", "ForwardDiff", "IterativeSolvers", "JuAFEM", "Juno", "KissThreading", "LazyArrays", "LineSearches", "LinearAlgebra", "MacroTools", "MappedArrays", "Optim", "Parameters", "Preconditioners", "Reexport", "Requires", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TimerOutputs", "Tracker", "VTKDataTypes", "WriteVTK"]
-git-tree-sha1 = "41f2f04f39c1bbae6e35d7ea1203aeba6a62c134"
+deps = ["CatViews", "Compat", "Distributions", "FillArrays", "ForwardDiff", "IterativeSolvers", "JuAFEM", "Juno", "KissThreading", "LazyArrays", "LineSearches", "LinearAlgebra", "MacroTools", "MappedArrays", "Optim", "Parameters", "Preconditioners", "Reexport", "Requires", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TimerOutputs", "Tracker", "VTKDataTypes", "WriteVTK"]
+git-tree-sha1 = "a9094d796fbf2091e73f1d9df3c8594693655e78"
 repo-rev = "master"
 repo-url = "https://github.com/mohamed82008/TopOpt.jl"
 uuid = "53a1e1a5-51bb-58a9-8a02-02056cc81109"
