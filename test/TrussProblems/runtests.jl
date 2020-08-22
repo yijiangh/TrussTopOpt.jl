@@ -2,6 +2,7 @@ using Test
 using BenchmarkTools
 
 # using TopOpt.TopOptProblems
+# using TopOpt
 using TrussTopOpt
 using JuAFEM
 using Setfield
@@ -16,20 +17,13 @@ load_supp_file = joinpath(ins_dir, "tim_load_support_case.json")
 ndim, n, m, node_points, elements = parse_truss_json(truss_file)
 loads, boundary = parse_support_load_json(load_supp_file)
 
+grid = _LinearTrussGrid(node_points, elements, boundary)
+ncells = getncells(grid)
+tgrid = TrussGrid(grid, falses(ncells), falses(ncells), falses(ncells))
+
 tgrid = TrussGrid(node_points, elements, boundary)
 # # @test JuAFEM.getnnodes(tgrid.grid) == n
 # # @test JuAFEM.getncells(tgrid.grid) == m
-
-fieldnames(typeof(tgrid))
-getcoordinates(tgrid.grid.nodes[1])
-nfaces(tgrid.grid.cells[1])
-JuAFEM.nnodes(tgrid.grid.cells[1])
-
-dim = typeof(tgrid.grid.cells[1]).parameters[1]
-
-Line
-
-@show JuAFEM.celltypes
 
 # dh = DofHandler(tgrid.grid)
 # dim = 2
@@ -55,10 +49,16 @@ geom_order = 1
 quad_order = 2
 refshape = JuAFEM.getrefshape(dh.field_interpolations[1])
 
+# create a new reference shape RefCube
+# overload reference_coordinates
+# separate dims
+
+# dim = 1
 interpolation_space = Lagrange{dim, refshape, geom_order}()
+
+# dim = 1
 quadrature_rule = QuadratureRule{dim, refshape}(quad_order)
-# interpolation_space = Lagrange{dim-1, refshape, geom_order}()
-# quadrature_rule = QuadratureRule{dim-1, refshape}(quad_order)
+
 cellvalues = CellScalarValues(quadrature_rule, interpolation_space)
 facevalues = FaceScalarValues(QuadratureRule{dim-1, refshape}(quad_order), interpolation_space)
 

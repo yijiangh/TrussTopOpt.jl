@@ -6,7 +6,7 @@ os:
   - linux
 julia:
   - 1
-  - nightly
+  # - nightly
 notifications:
   email: false
 

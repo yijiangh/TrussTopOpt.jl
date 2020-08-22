@@ -1,10 +1,10 @@
 using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
 
-@params struct TrussProblem{dim, T, N, M} <: StiffnessTopOptProblem{dim, T}
-    truss_grid::TrussGrid{dim, T, N, M}
+@params struct TrussProblem{dim, cdim, T, N, M} <: StiffnessTopOptProblem{dim, T}
+    truss_grid::TrussGrid{dim, cdim, T, N, M}
     E::T
     ν::T
-    ch::ConstraintHandler{<:DofHandler{dim, N, T, M}, T}
+    ch::ConstraintHandler{<:DofHandler{dim, <:Cell{dim,N,M}, T}, T}
     black::AbstractVector
     white::AbstractVector
     varind::AbstractVector{Int} # full dof -> free dof, based on black & white

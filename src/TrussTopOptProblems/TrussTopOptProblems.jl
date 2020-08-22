@@ -31,7 +31,7 @@ include("makie.jl")
 #     InpStiffness, StiffnessTopOptProblem, AbstractTopOptProblem,
 #     GlobalFEAInfo, ElementFEAInfo, YoungsModulus, assemble, assemble_f!,
 #     RaggedArray, ElementMatrix, rawmatrix, bcmatrix, save_mesh, RandomMagnitude, MultiLoad
-export TrussGrid, TrussProblem
+export TrussGrid, TrussProblem, _LinearTrussGrid
 export parse_truss_json, parse_support_load_json
 
 end # module

@@ -2,7 +2,7 @@ using TopOpt.TopOptProblems: AbstractGrid
 
 const Vec = JuAFEM.Vec
 
-struct TrussGrid{dim, T, N, M, TG<:JuAFEM.Grid{dim, N, T, M}} <: AbstractGrid{dim, T}
+@params struct TrussGrid{dim, cdim, T, N, M, TG<:JuAFEM.Grid{dim, <:JuAFEM.Cell{cdim,N,M}, T}} <: AbstractGrid{dim, T}
     grid::TG
     white_cells::BitVector
     black_cells::BitVector
@@ -12,8 +12,8 @@ end
     # sizes::NTuple{dim, T}
     # corners::NTuple{2, Vec{dim, T}}
 
-nnodespercell(::TrussGrid{dim,T,N,M}) where {dim, T, N, M} = N
-nfacespercell(::TrussGrid{dim,T,N,M}) where {dim, T, N, M} = M
+# nnodespercell(::TrussGrid{dim,T}) where {dim, T, N, M} = N
+# nfacespercell(::TrussGrid{dim,T}) where {dim, T, N, M} = M
 
 nnodes(cell::Type{JuAFEM.Cell{dim,N,M}}) where {dim, N, M} = N
 nnodes(cell::JuAFEM.Cell) = nnodes(typeof(cell))
@@ -36,13 +36,11 @@ end
 function _LinearTrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
         boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
     n_nodes = length(node_points)
-    TrussLine = Cell{dim,2,2}
-    # TrussLine = Line
 
     # * Generate cells
-    cells = TrussLine[]
+    cells = Line[]
     for e in elements
-        push!(cells, TrussLine((e[2]...,)))
+        push!(cells, Line((e[2]...,)))
     end
 
     # * Generate nodes
