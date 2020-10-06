@@ -12,9 +12,9 @@ makedocs(
     ],
 )
 
-if get(ENV, "CI", nothing) == "true"
-    deploydocs(
-        repo = "github.com/mohamed82008/TopOpt.jl.git",
-    )
-end
+# if get(ENV, "CI", nothing) == "true"
+#     deploydocs(
+#         repo = "github.com/mohamed82008/TopOpt.jl.git",
+#     )
+# end
 

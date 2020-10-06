@@ -1,2 +1,4 @@
+using Test, SafeTestsets
 
-include(joinpath("FEA", "runtests.jl"))
+@safetestset "Problem Def Tests" begin include("test_problems.jl") end
+# @safetestset "FEA Tests" begin include("test_fea.jl") end

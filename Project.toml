@@ -18,3 +18,13 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TopOpt = "53a1e1a5-51bb-58a9-8a02-02056cc81109"
 VTKDataTypes = "10d27dd1-1d0f-5a4c-b178-bd2d0045a217"
+
+[compat]
+julia = "1"
+
+[extras]
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["SafeTestsets", "Test"]

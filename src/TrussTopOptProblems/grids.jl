@@ -2,24 +2,25 @@ using TopOpt.TopOptProblems: AbstractGrid
 
 const Vec = JuAFEM.Vec
 
-@params struct TrussGrid{dim, cdim, T, N, M, TG<:JuAFEM.Grid{dim, <:JuAFEM.Cell{cdim,N,M}, T}} <: AbstractGrid{dim, T}
+# @params struct TrussGrid{xdim,N,M,C<:JuAFEM.Cell{xdim,N,M},T} <: AbstractGrid{xdim, T}
+struct TrussGrid{xdim,T,N,M,TG<:JuAFEM.Grid{xdim,<:JuAFEM.Cell{xdim,N,M},T}} <: AbstractGrid{xdim, T}
     grid::TG
     white_cells::BitVector
     black_cells::BitVector
     constant_cells::BitVector
 end
+    # grid::JuAFEM.Grid{xdim,C,T}
     # nels::NTuple{dim, Int}
     # sizes::NTuple{dim, T}
     # corners::NTuple{2, Vec{dim, T}}
 
-# nnodespercell(::TrussGrid{dim,T}) where {dim, T, N, M} = N
-# nfacespercell(::TrussGrid{dim,T}) where {dim, T, N, M} = M
-
-nnodes(cell::Type{JuAFEM.Cell{dim,N,M}}) where {dim, N, M} = N
+nnodespercell(::TrussGrid{xdim,T,N,M}) where {xdim,T,N,M} = N
+nfacespercell(::TrussGrid{xdim,T,N,M}) where {xdim,T,N,M} = M
+# nnodes(cell::Type{JuAFEM.Cell{dim,N,M}}) where {dim, N, M} = N
 nnodes(cell::JuAFEM.Cell) = nnodes(typeof(cell))
 
-function TrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-        boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
+function TrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
+        boundary::Dict{iT, SVector{xdim, fT}}) where {xdim, T, iT, fT}
     # ::Type{Val{CellType}}, 
     # if CellType === :Linear
     #     geoshape = Line
@@ -33,18 +34,19 @@ function TrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tu
     return TrussGrid(grid, falses(ncells), falses(ncells), falses(ncells))
 end
 
-function _LinearTrussGrid(node_points::Dict{iT, SVector{dim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-        boundary::Dict{iT, SVector{dim, fT}}) where {dim, T, iT, fT}
+function _LinearTrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
+        boundary::Dict{iT, SVector{xdim, fT}}) where {xdim, T, iT, fT}
     n_nodes = length(node_points)
 
     # * Generate cells
-    cells = Line[]
+    CellType = Cell{xdim,2,2}
+    cells = CellType[]
     for e in elements
-        push!(cells, Line((e[2]...,)))
+        push!(cells, CellType((e[2]...,)))
     end
 
     # * Generate nodes
-    nodes = Node{dim,T}[]
+    nodes = Node{xdim,T}[]
     for kval in node_points
         push!(nodes, Node((kval[2]...,)))
     end
