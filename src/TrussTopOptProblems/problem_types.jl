@@ -1,10 +1,9 @@
 using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
-# using TrussTopOpt.TrussTopOptProblems: getcelldim
 
 # @params struct TrussProblem{xdim, T, N, M} <: StiffnessTopOptProblem{xdim, T}
 struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
-    truss_grid::TrussGrid{xdim,T,N,M}
-    E::T
+    truss_grid::TrussGrid{xdim,T,N,M} # ground truss mesh
+    E::T # Young's modulus
     ν::T
     ch::ConstraintHandler{<:DofHandler{xdim,<:JuAFEM.Cell{xdim,N,M},T},T}
     force::Dict{Int, SVector{xdim, T}}
@@ -15,7 +14,8 @@ struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
 end
 
 function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, E = 1.0, ν = 0.3) where {xdim, T, iT, fT, CellType}
+    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, E = T(1.0), ν = T(0.3)) where {xdim, T, iT, fT, CellType}
+    # unify number type
     # _T = promote_type(eltype(sizes), typeof(E), typeof(ν), typeof(force))
     # if _T <: Integer
     #     T = Float64
@@ -24,12 +24,11 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     # end
     if CellType === :Linear
         truss_grid = TrussGrid(node_points, elements, supports)
-        # we assume geom interpolation order = function interpolation order
         geom_order = 1
     else
         @assert false "Other cell type not implemented"
     end
-    # reference domain dimension
+    # reference domain dimension for a line element
     ξdim = 1
 
     # * load nodeset
@@ -76,12 +75,10 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     # @show getnodeset(truss_grid.grid, "fixed_u2")
     for i=1:xdim
         dbc = Dirichlet(:u, getnodeset(truss_grid.grid, "fixed_u$i"), (x,t)->T[0], [i])
-
         # @show field_idx = JuAFEM.find_field(ch.dh, dbc.field_name)
         # @show interpolation = JuAFEM.getfieldinterpolation(ch.dh, field_idx)#ch.dh.field_interpolations[field_idx]
         # @show field_dim = JuAFEM.getfielddim(ch.dh, field_idx)#ch.dh.field_dims[field_idx]
         # @show bcvalue = JuAFEM.getbcvalue(ch.dh, field_idx)
-
         add!(ch, dbc)
     end
     close!(ch)
@@ -102,14 +99,29 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     return TrussProblem(truss_grid, E, ν, ch, loads, black, white, varind, metadata)
 end
 
-TopOpt.TopOptProblems.nnodespercell(p::TrussProblem) = nnodespercell(p.truss_grid)
-# function getcloaddict(p::Union{PointLoadCantilever{dim, T}, HalfMBB{dim, T}}) where {dim, T}
-#     f = T[0, -p.force, 0]
-#     fnode = Tuple(getnodeset(p.truss_grid.grid, "down_force"))[1]
-#     return Dict{Int, Vector{T}}(fnode => f)
-# end
+#########################################
 
+TopOpt.TopOptProblems.nnodespercell(p::TrussProblem) = nnodespercell(p.truss_grid)
+
+"""
+    getcloaddict(TrussProblem{xdim,T})
+
+Get a dict (node_idx => force vector)
+"""
+function getdloaddict(p::TrussProblem{xdim,T}) where {xdim, T}
+    return p.force
+end
+
+function default_quad_order(::TrussProblem)
+    return 1
+end
+
+getξdim(::TrussProblem) = 1
+
+#######################################
+# * extra Cell types for Line elements
 # https://github.com/lijas/JuAFEM.jl/blob/line2/src/Grid/grid.jl
+
 const Line2d = Cell{2,2,2}
 const Line3d = Cell{3,2,2}
 const QuadraticLine = Cell{1,3,2}

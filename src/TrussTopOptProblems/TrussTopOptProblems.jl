@@ -19,8 +19,8 @@ include("grids.jl")
 include("problem_types.jl")
 include("matrices_and_vectors.jl")
 include("elementinfo.jl")
-using .IO
 include(joinpath("IO", "IO.jl"))
+using .IO
 include("makie.jl")
 
 # export PointLoadCantilever, HalfMBB, LBeam, TieBeam,
