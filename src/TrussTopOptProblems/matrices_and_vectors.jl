@@ -136,7 +136,7 @@ end
 # load generation
 
 """
-    _make_dload(problem)
+    _make_dload(fes, problem::TrussProblem, facevalues)
 
 Assemble a sparse vector for boundary (face) loads
 """

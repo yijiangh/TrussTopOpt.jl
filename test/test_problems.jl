@@ -26,7 +26,7 @@ problem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary);
 @test problem.E == E
 @test problem.ν == ν
 @test problem.black == problem.white == falses(ncells)
-@test problem.force == loads
+@test problem.force == loadss
 @test problem.varind == 1:ncells
 grid = problem.ch.dh.grid
 @test length(grid.cells) == ncells

@@ -23,6 +23,7 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     #     T = _T
     # end
     if CellType === :Linear
+        # TODO load should be added here as well
         truss_grid = TrussGrid(node_points, elements, supports)
         geom_order = 1
     else
@@ -89,9 +90,9 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
 
     metadata = Metadata(dh)
 
-    fnode = Tuple(getnodeset(truss_grid.grid, "load"))[1]
-    node_dofs = metadata.node_dofs
-    force_dof = node_dofs[2, fnode]
+    # fnode = Tuple(getnodeset(truss_grid.grid, "load"))[1]
+    # node_dofs = metadata.node_dofs
+    # force_dof = node_dofs[2, fnode]
 
     black, white = find_black_and_white(dh)
     varind = find_varind(black, white)
@@ -126,9 +127,9 @@ const Line2d = Cell{2,2,2}
 const Line3d = Cell{3,2,2}
 const QuadraticLine = Cell{1,3,2}
 
-# 1D: vertices
-JuAFEM.faces(c::Union{Line,QuadraticLine}) = (c.nodes[1], c.nodes[2])
-JuAFEM.vertices(c::Union{Line,Line2d,Line3d,QuadraticLine}) = (c.nodes[1], c.nodes[2])
+# 1D: vertices, Line is defined in JuAFEM
+JuAFEM.faces(c::Union{QuadraticLine}) = (c.nodes[1], c.nodes[2])
+JuAFEM.vertices(c::Union{Line2d,Line3d,QuadraticLine}) = (c.nodes[1], c.nodes[2])
 
 # 2D: vertices, faces
 JuAFEM.faces(c::Line2d) = ((c.nodes[1],c.nodes[2]),) 
