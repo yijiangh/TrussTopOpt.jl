@@ -3,8 +3,7 @@ using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
 # @params
 struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
     truss_grid::TrussGrid{xdim,T,N,M} # ground truss mesh
-    E::T # Young's modulus
-    ν::T # TODO remove Poisson ratio
+    E::Vector{T} # Young's modulus for each cell
     ch::ConstraintHandler{<:DofHandler{xdim,<:JuAFEM.Cell{xdim,N,M},T},T}
     force::Dict{Int, SVector{xdim, T}}
     black::AbstractVector
@@ -19,7 +18,7 @@ getJuaFEMgrid(sp::TrussProblem) = sp.truss_grid.grid
 getcrosssecs(sp::TrussProblem) = sp.truss_grid.crosssecs
 
 function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, E = T(1.0), ν = T(0.3)) where {xdim, T, iT, fT, CellType}
+    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, E=T(1.0), crosssecs=T(1.0)) where {xdim, T, iT, fT, CellType}
     # unify number type
     # _T = promote_type(eltype(sizes), typeof(E), typeof(ν), typeof(force))
     # if _T <: Integer
@@ -29,13 +28,23 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     # end
     if CellType === :Linear
         # TODO load should be added here as well
-        truss_grid = TrussGrid(node_points, elements, supports)
+        truss_grid = TrussGrid(node_points, elements, supports; crosssecs)
         geom_order = 1
     else
         @assert false "Other cell type not implemented"
     end
     # reference domain dimension for a line element
     ξdim = 1
+    ncells = getncells(truss_grid)
+
+    if E isa Vector
+        @assert length(E) == ncells
+        E = convert(Vector{T}, E)
+    elseif E isa Number
+        E = ones(T, ncells) * T(crosssecs)
+    else
+        error("Invalid E: $(E)")
+    end
 
     # * load nodeset
     # the grid node ordering coincides with the input node_points
@@ -97,7 +106,16 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     black, white = find_black_and_white(dh)
     varind = find_varind(black, white)
 
-    return TrussProblem(truss_grid, E, ν, ch, loads, black, white, varind, metadata)
+    return TrussProblem(truss_grid, E, ch, loads, black, white, varind, metadata)
+end
+
+function Base.show(io::Base.IO, mime::MIME"text/plain", sp::TrussProblem)
+    println(io, "TrussProblem:")
+    print(io, "    ")
+    Base.show(io, mime, sp.truss_grid)
+    println(io, "    E: $(sp.E)")
+    println(io, "    point loads: $(length(sp.force))")
+    println(io, "    active vars: $(sum(sp.varind .!= 0))")
 end
 
 #########################################

@@ -54,7 +54,7 @@ function _make_Kes_and_weights(
     ::Type{Tuple{MatrixType, VectorType}},
     ::Type{Val{n_basefuncs}},
     ::Type{Val{Kesize}},
-    E::T, crosssecs::Vector{T}, 
+    E::Vector{T}, crosssecs::Vector{T}, 
     quadrature_rule, cellvalues::CellScalarValues{1,xdim}) where {xdim, N, T, MatrixType <: StaticArray, VectorType, n_basefuncs, Kesize}
     nel = getncells(dh.grid)
     Kes = Symmetric{T, MatrixType}[]
@@ -81,7 +81,7 @@ function _make_Kes_and_weights(
                     for a in 1:n_basefuncs
                         ∇ϕa = shape_gradient(cellvalues, q_point, a)
                         # TODO specialized KroneckerDelta struct to make dotdot more efficient
-                        Ke_e .= E * ∇ϕa ⊗ ∇ϕb * dΩ
+                        Ke_e .= E[k] * ∇ϕa ⊗ ∇ϕb * dΩ
                         for d1 in 1:xdim
                             #if dim*(b-1) + d2 >= dim*(a-1) + d1
                             Ke_0[xdim*(a-1) + d1, xdim*(b-1) + d2] += Ke_e[d1,d2]

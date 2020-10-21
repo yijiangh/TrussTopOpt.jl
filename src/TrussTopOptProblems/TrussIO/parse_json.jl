@@ -7,7 +7,6 @@ function parse_truss_json(file_path::String)
     m = data["element_num"]
     iT = Int
     T = Float64
-
     node_points = Dict{iT, SVector{ndim, T}}()
     elements = Dict{iT, Tuple{iT,iT}}()
     for i=1:n
@@ -19,8 +18,21 @@ function parse_truss_json(file_path::String)
     for i=1:m
         elements[i] = (data["element_list"][i]...,)
     end
-    E = T(data["E"])
-    return ndim, n, m, node_points, elements, E
+    E = data["E"]
+    crosssecs = data["crosssecs"]
+    if E isa Vector
+        E = convert(Vector{T}, E)
+        @assert length(E) == m
+    else
+        E = T(E)
+    end
+    if crosssecs isa Vector
+        crosssecs = convert(Vector{T}, crosssecs)
+        @assert length(crosssecs) == m
+    else
+        crosssecs = T(crosssecs)
+    end
+    return ndim, n, m, node_points, elements, E, crosssecs
 end
 
 function parse_support_load_json(file_path::String)

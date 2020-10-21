@@ -8,8 +8,6 @@
   "dimension": 2,
   "node_num": 3,
   "element_num": 2,
-  "E": 200000,
-  "E_unit" : "MPa",
   "node_list": [
     {
       "point": [6.0, 4.0],
@@ -27,5 +25,13 @@
   "element_list": [
     [1 , 2],
     [1 , 3]
-  ]
+  ],
+  "crosssecs" : [
+    0.006, 0.008
+  ],
+  "crosssec_unit": "m2",
+  "E": [
+    2e8, 2e8
+  ],
+  "E_unit" : "kN/m2"
 }

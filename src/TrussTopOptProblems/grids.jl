@@ -18,9 +18,10 @@ nnodespercell(::TrussGrid{xdim,T,N,M}) where {xdim,T,N,M} = N
 nfacespercell(::TrussGrid{xdim,T,N,M}) where {xdim,T,N,M} = M
 nnodes(cell::Type{JuAFEM.Cell{dim,N,M}}) where {dim, N, M} = N
 nnodes(cell::JuAFEM.Cell) = nnodes(typeof(cell))
+JuAFEM.getncells(tg::TrussGrid) = JuAFEM.getncells(tg.grid)
 
 function TrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-        boundary::Dict{iT, SVector{xdim, fT}}; crosssecs=undef) where {xdim, T, iT, fT}
+        boundary::Dict{iT, SVector{xdim, fT}}; crosssecs=T(1.0)) where {xdim, T, iT, fT}
     # ::Type{Val{CellType}}, 
     # if CellType === :Linear
     #     geoshape = Line
@@ -31,9 +32,13 @@ function TrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, T
 
     grid = _LinearTrussGrid(node_points, elements, boundary)
     ncells = getncells(grid)
-    if crosssecs == undef
-        # default cross section area to 1
-        crosssecs = ones(T, ncells)
+    if crosssecs isa Vector
+        @assert length(crosssecs) == ncells
+        crosssecs = convert(Vector{T}, crosssecs)
+    elseif crosssecs isa Number
+        crosssecs = ones(T, ncells) * T(crosssecs)
+    else
+        error("Invalid crossecs: $(crossecs)")
     end
     return TrussGrid(grid, falses(ncells), falses(ncells), falses(ncells), crosssecs)
 end
@@ -75,6 +80,15 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dic
     return Grid(cells, nodes, boundary_matrix=boundary_matrix)
     # return Grid(cells, nodes, facesets=facesets, 
     #     boundary_matrix=boundary_matrix)
+end
+
+function Base.show(io::Base.IO, mime::MIME"text/plain", tg::TrussGrid)
+    println(io, "TrussGrid:")
+    print(io, "\t-")
+    Base.show(io, mime, tg.grid)
+    println(io,"")
+    print(io, "\t-")
+    println(io, "white cells:T|$(sum(tg.white_cells))|, black cells:T|$(sum(tg.black_cells))|, const cells:T|$(sum(tg.constant_cells))|")
 end
 
 """
