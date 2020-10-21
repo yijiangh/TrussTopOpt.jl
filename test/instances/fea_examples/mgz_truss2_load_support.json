@@ -1,0 +1,31 @@
+{
+  "applied_shape_file": "mgz_truss2.json",
+  "dimension": 3,
+  "force_unit": "kN",
+  "moment_unit": "kN-m",
+  "include_self_weight": false,
+  "point_load_list": [
+    {
+      "node_id": 1,
+      "force": [200, 600, -800]
+    }
+  ],
+  "support_node_list": [
+    {
+      "node_id": 2,
+      "fixities": [1, 1, 1]
+    },
+    {
+      "node_id": 3,
+      "fixities": [1, 1, 1]
+    },
+    {
+      "node_id": 4,
+      "fixities": [1, 1, 1]
+    },
+    {
+      "node_id": 5,
+      "fixities": [1, 1, 1]
+    }
+  ]
+}

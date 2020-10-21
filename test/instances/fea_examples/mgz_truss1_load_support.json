@@ -1,8 +1,6 @@
 {
   "applied_shape_file": "mgz_truss1.json",
   "dimension": 2,
-  "node_num": 19,
-  "element_num": 42,
   "force_unit": "kN",
   "moment_unit": "kN-m",
   "include_self_weight": false,

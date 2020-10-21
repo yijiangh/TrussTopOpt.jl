@@ -3,11 +3,13 @@
   "_info": "mgz textbook P21 Example 2.1",
   "generate_time": "10/20/2020 22:30",
   "model_type": "truss",
-  "TO_model_type": "ground_mesh",
+  "TO_model_type": "analysis",
   "unit": "meter",
   "dimension": 2,
   "node_num": 3,
   "element_num": 2,
+  "E": 200000,
+  "E_unit" : "MPa",
   "node_list": [
     {
       "point": [6.0, 4.0],

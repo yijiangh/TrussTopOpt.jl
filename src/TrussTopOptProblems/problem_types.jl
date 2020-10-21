@@ -4,7 +4,7 @@ using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
 struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
     truss_grid::TrussGrid{xdim,T,N,M} # ground truss mesh
     E::T # Young's modulus
-    ν::T
+    ν::T # TODO remove Poisson ratio
     ch::ConstraintHandler{<:DofHandler{xdim,<:JuAFEM.Cell{xdim,N,M},T},T}
     force::Dict{Int, SVector{xdim, T}}
     black::AbstractVector
