@@ -45,14 +45,14 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dic
     # * Generate cells, Line2d or Line3d
     CellType = Cell{xdim,2,2}
     cells = CellType[]
-    for e in elements
-        push!(cells, CellType((e[2]...,)))
+    for (e_ind, element) in elements
+        push!(cells, CellType((element...,)))
     end
 
     # * Generate nodes
     nodes = Node{xdim,T}[]
-    for kval in node_points
-        push!(nodes, Node((kval[2]...,)))
+    for (n_id, node_point) in node_points
+        push!(nodes, Node((node_point...,)))
     end
 
     # * label boundary (cell, face)
@@ -95,3 +95,12 @@ function node_neighbors(cells)
     end
     cell_from_node
 end
+
+################################
+
+function Base.show(io::Base.IO, ::MIME"text/plain", grid::JuAFEM.Grid{xdim, JuAFEM.Cell{xdim,2,2}}) where {xdim}
+    print(io, "$(typeof(grid)) with $(getncells(grid)) $(extra_celltypes[eltype(grid.cells)]) cells and $(getnnodes(grid)) nodes")
+end
+
+const extra_celltypes = Dict{DataType, String}(JuAFEM.Cell{2,2,2}  => "Line2D", 
+                                               JuAFEM.Cell{3,2,2}  => "Line3D")

@@ -1,4 +1,4 @@
-module IO
+module TrussIO
 
 using StaticArrays
 export  parse_truss_json,

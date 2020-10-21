@@ -30,16 +30,18 @@ function make_Kes_and_fes(problem::TrussProblem{xdim, T}, quad_order, ::Type{Val
     cellvalues = CellScalarValues(T, quadrature_rule, interpolation_space; xdim=xdim)
 
     # A Line element's faces are points
-    # facevalues = FaceScalarValues(QuadratureRule{dim-1, refshape}(quad_order), interpolation_space)
+    facevalues = FaceScalarValues(QuadratureRule{ξdim-1, refshape}(quad_order), interpolation_space)
 
     # Calculate element stiffness matrices
     n_basefuncs = getnbasefunctions(cellvalues)
     Kesize = xdim*n_basefuncs
     MatrixType, VectorType = gettypes(T, Val{mat_type}, Val{Kesize})
     Kes, weights = _make_Kes_and_weights(dh, Tuple{MatrixType, VectorType}, Val{n_basefuncs}, Val{xdim*n_basefuncs}, E, crosssecs, quadrature_rule, cellvalues)
-    dloads = _make_dloads(weights, problem, facevalues)
 
-    return Kes, weights, dloads, cellvalues # , facevalues
+    # // distributed load, not used in a truss problem
+    # dloads = _make_dloads(weights, problem, facevalues)
+
+    return Kes, weights, cellvalues, facevalues #dloads, 
 end
 
 """
@@ -72,12 +74,13 @@ function _make_Kes_and_weights(
             dΩ = getdetJdV(cellvalues, q_point)
             for b in 1:n_basefuncs
                 ∇ϕb = shape_gradient(cellvalues, q_point, b)
-                ϕb = shape_value(cellvalues, q_point, b)
+                # ϕb = shape_value(cellvalues, q_point, b)
                 for d2 in 1:xdim
                     # self weight force calculation
                     # fe = @set fe[(b-1)*dim + d2] += ϕb * body_force[d2] * dΩ
                     for a in 1:n_basefuncs
                         ∇ϕa = shape_gradient(cellvalues, q_point, a)
+                        # TODO specialized KroneckerDelta struct to make dotdot more efficient
                         Ke_e .= E * ∇ϕa ⊗ ∇ϕb * dΩ
                         for d1 in 1:xdim
                             #if dim*(b-1) + d2 >= dim*(a-1) + d1
@@ -130,59 +133,4 @@ function truss_reinit!(cv::CellValues{1,xdim}, x::AbstractVector{Vec{xdim,T}}, c
             cv.dNdx[j, i] = cv.dNdξ[j, i][1] * Jinv'
         end
     end
-end
-
-###########################################
-# load generation
-
-"""
-    _make_dload(fes, problem::TrussProblem, facevalues)
-
-Assemble a sparse vector for boundary (face) loads
-"""
-function _make_dloads(fes, problem::TrussProblem, facevalues)
-    dim = getdim(problem)
-    N = nnodespercell(problem)
-    T = floattype(problem)
-    dloads = deepcopy(fes)
-    for i in 1:length(dloads)
-        if eltype(dloads) <: SArray
-            dloads[i] = zero(eltype(dloads))
-        else
-            dloads[i] .= 0
-        end
-    end
-    pressuredict = getpressuredict(problem)
-    dh = getdh(problem)
-    grid = dh.grid
-    boundary_matrix = grid.boundary_matrix
-    cell_coords = zeros(JuAFEM.Vec{dim, T}, N)
-    n_basefuncs = getnbasefunctions(facevalues)
-    for k in keys(pressuredict)
-        t = -pressuredict[k] # traction = negative the pressure
-        faceset = getfacesets(problem)[k]
-        for (cellid, faceid) in faceset
-            boundary_matrix[faceid, cellid] || throw("Face $((cellid, faceid)) not on boundary.")
-            fe = dloads[cellid]
-            getcoordinates!(cell_coords, grid, cellid)
-            reinit!(facevalues, cell_coords, faceid)
-            for q_point in 1:getnquadpoints(facevalues)
-                dΓ = getdetJdV(facevalues, q_point) # Face area
-                normal = getnormal(facevalues, q_point) # Nomral vector at quad point
-                for i in 1:n_basefuncs
-                    ϕ = shape_value(facevalues, q_point, i) # Shape function value
-                    for d = 1:dim
-                        if fe isa SArray
-                            fe = @set fe[(i-1)*dim + d] += ϕ * t * normal[d] * dΓ
-                        else
-                            fe[(i-1)*dim + d] += ϕ * t * normal[d] * dΓ
-                        end
-                    end
-                end
-            end
-            dloads[cellid] = fe
-        end
-    end
-    
-    return dloads
 end

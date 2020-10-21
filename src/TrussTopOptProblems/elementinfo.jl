@@ -1,5 +1,5 @@
 using TopOpt: ElementFEAInfo, ElementMatrix
-using TopOpt.TopOptProblems: make_cload
+using TopOpt.TopOptProblems: make_cload, convert
 
 """
     ElementFEAInfo(sp, quad_order=2, ::Type{Val{mat_type}}=Val{:Static}) where {mat_type}
@@ -12,17 +12,19 @@ Constructs an instance of `ElementFEAInfo` from a stiffness **truss** problem `s
 The static matrices and vectors are more performant and GPU-compatible therefore they are used by default.
 """
 function ElementFEAInfo(sp::TrussProblem, quad_order = 2, ::Type{Val{mat_type}} = Val{:Static},) where {mat_type} 
-    Kes, weights, cellvalues = make_Kes_and_fes(sp, quad_order, Val{mat_type})
+    # weights: self-weight load vectors
+    Kes, weights, cellvalues, facevalues = make_Kes_and_fes(sp, quad_order, Val{mat_type})
     element_Kes = convert(
         Vector{<:ElementMatrix},
         Kes;
         bc_dofs = sp.ch.prescribed_dofs,
         dof_cells = sp.metadata.dof_cells,
     )
-    print("convert passed")
 
-    # fixedload = Vector(make_cload(sp))
-    # update 
+    # * concentrated load
+    # ? why convert a sparse vector back to a Vector?
+    fixedload = Vector(make_cload(sp))
+    # * distributed load (if any)
     # assemble_f!(fixedload, sp, dloads)
 
     cellvolumes = get_cell_volumes(sp, cellvalues)
@@ -40,5 +42,18 @@ function ElementFEAInfo(sp::TrussProblem, quad_order = 2, ::Type{Val{mat_type}} 
         sp.varind,
         cells,
     )
+end
+
+####################################
+
+function get_cell_volumes(sp::TrussProblem{xdim, T}, cellvalues) where {xdim, T}
+    dh = sp.ch.dh
+    crosssecs = sp.truss_grid.crosssecs
+    cellvolumes = zeros(T, getncells(dh.grid))
+    for (i, cell) in enumerate(CellIterator(dh))
+        truss_reinit!(cellvalues, cell, crosssecs[i])
+        cellvolumes[i] = sum(JuAFEM.getdetJdV(cellvalues, q_point) for q_point in 1:JuAFEM.getnquadpoints(cellvalues))
+    end
+    return cellvolumes
 end
 

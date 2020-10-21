@@ -1,0 +1,29 @@
+{
+  "model_name": "mgz_truss1",
+  "_info": "mgz textbook P21 Example 2.1",
+  "generate_time": "10/20/2020 22:30",
+  "model_type": "truss",
+  "TO_model_type": "ground_mesh",
+  "unit": "meter",
+  "dimension": 2,
+  "node_num": 3,
+  "element_num": 2,
+  "node_list": [
+    {
+      "point": [6.0, 4.0],
+      "node_id": 1
+    },
+    {
+      "point": [0, 0],
+      "node_id": 2
+    },
+    {
+      "point": [9.0, 0.0],
+      "node_id": 3
+    }
+  ],
+  "element_list": [
+    [1 , 2],
+    [1 , 3]
+  ]
+}

@@ -4,6 +4,7 @@ using JuAFEM, StaticArrays, LinearAlgebra
 using SparseArrays
 using TopOpt
 using TopOpt.Utilities
+using Setfield
 # using ..TopOpt: PENALTY_BEFORE_INTERPOLATION
 # using ..Utilities: @forward_property
 
@@ -19,15 +20,11 @@ include("grids.jl")
 include("problem_types.jl")
 include("matrices_and_vectors.jl")
 include("elementinfo.jl")
-include(joinpath("IO", "IO.jl"))
-using .IO
+include(joinpath("TrussIO", "TrussIO.jl"))
+using .TrussIO
 include("makie.jl")
 
-# export PointLoadCantilever, HalfMBB, LBeam, TieBeam,
-#     InpStiffness, StiffnessTopOptProblem, AbstractTopOptProblem,
-#     GlobalFEAInfo, ElementFEAInfo, YoungsModulus, assemble, assemble_f!,
-#     RaggedArray, ElementMatrix, rawmatrix, bcmatrix, save_mesh, RandomMagnitude, MultiLoad
-export TrussGrid, TrussProblem # _LinearTrussGrid
+export TrussGrid, TrussProblem
 export parse_truss_json, parse_support_load_json
 
 end # module

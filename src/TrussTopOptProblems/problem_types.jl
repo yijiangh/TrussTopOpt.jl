@@ -1,6 +1,6 @@
 using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
 
-# @params struct TrussProblem{xdim, T, N, M} <: StiffnessTopOptProblem{xdim, T}
+# @params
 struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
     truss_grid::TrussGrid{xdim,T,N,M} # ground truss mesh
     E::T # Young's modulus
@@ -9,9 +9,14 @@ struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
     force::Dict{Int, SVector{xdim, T}}
     black::AbstractVector
     white::AbstractVector
-    varind::AbstractVector{Int} # full dof -> free dof, based on black & white
+    varind::AbstractVector{Int} # variable dof => free dof, based on black & white
     metadata::Metadata
 end
+# - `force_dof`: dof number at which the force is applied
+
+gettrussgrid(sp::TrussProblem) = sp.truss_grid
+getJuaFEMgrid(sp::TrussProblem) = sp.truss_grid.grid
+getcrosssecs(sp::TrussProblem) = sp.truss_grid.crosssecs
 
 function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
     loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, E = T(1.0), ν = T(0.3)) where {xdim, T, iT, fT, CellType}
@@ -33,6 +38,7 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     ξdim = 1
 
     # * load nodeset
+    # the grid node ordering coincides with the input node_points
     if haskey(truss_grid.grid.nodesets, "load")
         pop!(truss_grid.grid.nodesets, "load")
     end
@@ -72,14 +78,8 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     close!(dh)
 
     ch = ConstraintHandler(dh)
-    # @show getnodeset(truss_grid.grid, "fixed_u1")
-    # @show getnodeset(truss_grid.grid, "fixed_u2")
     for i=1:xdim
         dbc = Dirichlet(:u, getnodeset(truss_grid.grid, "fixed_u$i"), (x,t)->T[0], [i])
-        # @show field_idx = JuAFEM.find_field(ch.dh, dbc.field_name)
-        # @show interpolation = JuAFEM.getfieldinterpolation(ch.dh, field_idx)#ch.dh.field_interpolations[field_idx]
-        # @show field_dim = JuAFEM.getfielddim(ch.dh, field_idx)#ch.dh.field_dims[field_idx]
-        # @show bcvalue = JuAFEM.getbcvalue(ch.dh, field_idx)
         add!(ch, dbc)
     end
     close!(ch)
@@ -107,9 +107,9 @@ TopOpt.TopOptProblems.nnodespercell(p::TrussProblem) = nnodespercell(p.truss_gri
 """
     getcloaddict(TrussProblem{xdim,T})
 
-Get a dict (node_idx => force vector)
+Get a dict (node_idx => force vector) for concentrated loads
 """
-function getdloaddict(p::TrussProblem{xdim,T}) where {xdim, T}
+function TopOpt.TopOptProblems.getcloaddict(p::TrussProblem{xdim,T}) where {xdim, T}
     return p.force
 end
 
