@@ -48,7 +48,9 @@ quad_order=default_quad_order(problem)
 elementinfo = ElementFEAInfo(problem, quad_order, Val{:Static});
 for cell in CellIterator(getdh(problem))
     cellidx = cellid(cell)
-    coords = getcoordinates(cell) # get the coordinates
+    # println("---\n Cell #$cellidx")
+
+    coords = getcoordinates(cell)
     L = norm(coords[1] - coords[2])
     A = getcrosssecs(problem)[cellidx]
     @test elementinfo.cellvolumes[cellidx] ≈ L * A
@@ -59,8 +61,27 @@ for cell in CellIterator(getdh(problem))
     @test book_Ke ≈ Ke
 end
 
+# we use kN for force and m for length
+# thus, pressure/modulus is in kN/m
 solver = FEASolver(Displacement, Direct, problem)
 solver()
-solver.u
+@show solver.u
+
+book_K = [0 -0.1124 -1.7612
+          0 0 0.2103
+          0 0 0]
+book_K += book_K'
+book_K += Diagonal([2.522, 1.147, 8.757])
+# 1 Mpa = 1000 Kn/m
+# 200,000 Mpa = 2e8 Kn/m
+# the book_k above is in `mm`, * 1e-3 to make it in unit `m`
+book_K *= 2e8 * 1e-3 
+book_u = book_K \ [200, 600, -800]
+
+@show book_K
+@show book_u
+
+@assert book_u ≈ solver.u[1:3]
+@assert book_K ≈ solver.globalinfo.K.data[1:3, 1:3]
 
 # end # end test set

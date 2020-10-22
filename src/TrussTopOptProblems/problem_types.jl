@@ -63,9 +63,9 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
             pop!(truss_grid.grid.nodesets, "fixed_u$i")
         end
         support_nodesets = Set{Int}()
-        for kval in supports
-            if kval[2][xdim]
-                push!(support_nodesets, kval[1])
+        for (nodeidx, condition) in supports
+            if condition[i]
+                push!(support_nodesets, nodeidx)
             end
         end
         addnodeset!(truss_grid.grid, "fixed_u$i", support_nodesets)

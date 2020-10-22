@@ -12,7 +12,7 @@ Constructs an instance of `ElementFEAInfo` from a stiffness **truss** problem `s
 The static matrices and vectors are more performant and GPU-compatible therefore they are used by default.
 """
 function ElementFEAInfo(sp::TrussProblem, quad_order = 2, ::Type{Val{mat_type}} = Val{:Static},) where {mat_type} 
-    # weights: self-weight load vectors
+    # weights: self-weight element load vectors, all zeros now
     Kes, weights, cellvalues, facevalues = make_Kes_and_fes(sp, quad_order, Val{mat_type})
     element_Kes = convert(
         Vector{<:ElementMatrix},

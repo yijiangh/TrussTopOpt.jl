@@ -53,7 +53,7 @@ function parse_support_load_json(file_path::String)
     @assert(n_supp_nodes > 0)
     boundary = Dict{iT, SVector{ndim, Bool}}()
     for i=1:n_supp_nodes
-        supp_v = data["support_node_list"][i]["node_id"]
+        supp_v = iT(data["support_node_list"][i]["node_id"])
         boundary[supp_v] = data["support_node_list"][i]["fixities"]
     end
 
