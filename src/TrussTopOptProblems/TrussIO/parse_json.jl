@@ -10,7 +10,7 @@ function parse_truss_json(file_path::String)
     node_points = Dict{iT, SVector{ndim, T}}()
     elements = Dict{iT, Tuple{iT,iT}}()
     for i=1:n
-        node_points[i] = data["node_list"][i]["point"]
+        node_points[i] = convert(SVector{ndim,T}, data["node_list"][i]["point"])
         if "node_id" in keys(data["node_list"][i])
             @assert data["node_list"][i]["node_id"] == i
         end
@@ -46,7 +46,7 @@ function parse_support_load_json(file_path::String)
     loads = Dict{iT, SVector{ndim, T}}()
     for i=1:n_load_nodes
         load_v = data["point_load_list"][i]["node_id"]
-        loads[load_v] = data["point_load_list"][i]["force"]
+        loads[load_v] = convert(SVector{ndim,T}, data["point_load_list"][i]["force"])
     end
 
     n_supp_nodes = length(data["support_node_list"])
