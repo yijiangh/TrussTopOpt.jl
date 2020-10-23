@@ -43,6 +43,14 @@ grid = problem.ch.dh.grid
 # @test length(grid.boundary_matrix.nzval) == length(boundary) * 2
 
 # metadata = getmetadata(problem)
+# truss2
+# dof_from_element = [1 2 3 4; 1 2 5 6]
+# dof_stat = [0,0,1,1,1,1]
+
+# truss3
+dof_from_element = [1 2 3 4; 1 2 5 6; 3 4 5 6]
+dof_stat = [0,0,0,1,1,1]
+
 book_Ks = []
 push!(book_Ks, ([0 -0.5 -0.5 0.5; 0 0 0.5 -0.5; 0 0 0 -0.5; 0 0 0 0], [0.5, 0.5, 0.5, 0.5], 707.11*1e3))
 push!(book_Ks, ([0 0.433 -0.75 -0.433; 0 0 -0.433 -0.25; 0 0 0 0.433; 0 0 0 0], [0.75, 0.25, 0.75, 0.25], 375.00*1e3))
@@ -52,7 +60,7 @@ quad_order=default_quad_order(problem)
 elementinfo = ElementFEAInfo(problem, quad_order, Val{:Static});
 for cell in CellIterator(getdh(problem))
     cellidx = cellid(cell)
-    println("---\n Cell #$cellidx")
+    # println("---\n Cell #$cellidx")
 
     coords = getcoordinates(cell)
     L = norm(coords[1] - coords[2])
@@ -60,25 +68,20 @@ for cell in CellIterator(getdh(problem))
     @test elementinfo.cellvolumes[cellidx] ≈ L * A
 
     Γ = global2local_transf_matrix(coords...)
-    book_Ke = (A*E[cellidx]/L)*Γ'*[1 -1; -1 1]*Γ
+    Ke_m = (A*E[cellidx]/L)*Γ'*[1 -1; -1 1]*Γ
     Ke = elementinfo.Kes[cellidx]
-    @test book_Ke ≈ Ke
-
-    # @show (book_Ke .- matrix_from_upper(book_Ks[cellidx]...)) ./ book_Ke
+    @test Ke_m ≈ Ke
+    
+    Ke_book = matrix_from_upper(book_Ks[cellidx]...)
+    Ke_diff = (Ke_book .- Ke) ./ Ke_book
+    # @test all((Ke_diff .< 1e-5) .| (Ke_diff .== NaN))
+    @test all((Ke_diff .< 1e-5) .| ((Ke_book .≈ 0) .& (Ke .≈ 0)))
 end
 
 # we use kN for force and m for length
 # thus, pressure/modulus is in kN/m
 solver = FEASolver(Displacement, Direct, problem)
 solver()
-
-# truss2
-# dof_from_element = [1 2 3 4; 1 2 5 6]
-# dof_stat = [0,0,1,1,1,1]
-
-# truss3
-dof_from_element = [1 2 3 4; 1 2 5 6; 3 4 5 6]
-dof_stat = [0,0,0,1,1,1]
 
 n_fixed_dof = sum(dof_stat)
 n_free_dof = length(dof_stat)-n_fixed_dof
@@ -89,6 +92,15 @@ n_free_dof = length(dof_stat)-n_fixed_dof
 to_K_full = solver.globalinfo.K.data
 @show to_K_ff = Array(to_K_full[1:n_free_dof,1:n_free_dof])
 @show to_u = solver.u[1:n_free_dof]
+println("---")
+
+# * manual construction
+build_K_full = assemble_global_stiffness_matrix(elementinfo.Kes, nnodes, dof_from_element)
+Perm = compute_permutation(dof_stat)
+build_K = Perm*build_K_full*Perm'
+@show build_K_ff = Array(build_K[1:n_free_dof,1:n_free_dof])
+@show build_u = build_K_ff \ P_f
+@assert build_K_ff*build_u ≈ P_f
 println("---")
 
 # * directly from book
@@ -104,16 +116,7 @@ println("---")
 # book_u = book_K \ [200, 600, -800]
 # @show book_K
 # @show book_u
-println("---")
-
-# * manual construction
-build_K_full = assemble_global_stiffness_matrix(elementinfo.Kes, nnodes, dof_from_element)
-Perm = compute_permutation(dof_stat)
-build_K = Perm*build_K_full*Perm'
-@show build_K_ff = Array(build_K[1:n_free_dof,1:n_free_dof])
-@show build_u = build_K_ff \ P_f
-@assert build_K_ff*build_u ≈ P_f
-println("---")
+# println("---")
 
 # @assert book_u ≈ solver.u[1:3]
 # @assert book_K ≈ solver.globalinfo.K.data[1:3, 1:3]
