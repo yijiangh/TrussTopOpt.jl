@@ -26,5 +26,6 @@ include("makie.jl")
 
 export TrussGrid, TrussProblem
 export parse_truss_json, parse_support_load_json
+export draw_truss_problem!
 
 end # module

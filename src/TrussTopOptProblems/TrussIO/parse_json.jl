@@ -18,8 +18,8 @@ function parse_truss_json(file_path::String)
     for i=1:m
         elements[i] = (data["element_list"][i]...,)
     end
-    E = data["E"]
-    crosssecs = data["crosssecs"]
+    E = "E" in keys(data) ? data["E"] : 1.0
+    crosssecs = "crosssecs" in keys(data) ? data["crosssecs"] : 1.0
     if E isa Vector
         E = convert(Vector{T}, E)
         @assert length(E) == m
