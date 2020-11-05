@@ -138,11 +138,3 @@ function compute_permutation(dof_stat)
     Perm = sparse(perm_row, perm_col, perm_data, total_dof, total_dof)
     return Perm
 end
-
-function matrix_from_upper(upper, diag, scale=1.0)
-    tmpK = copy(upper)
-    tmpK += upper'
-    tmpK += Diagonal(diag)
-    @assert tmpK == tmpK'
-    return tmpK*scale
-end

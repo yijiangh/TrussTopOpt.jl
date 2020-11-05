@@ -98,11 +98,6 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     update!(ch, t)
 
     metadata = Metadata(dh)
-    # @show metadata
-    @show metadata.cell_dofs
-    @show metadata.dof_cells
-    @show metadata.node_cells
-    @show metadata.node_dofs
 
     # fnode = Tuple(getnodeset(truss_grid.grid, "load"))[1]
     # node_dofs = metadata.node_dofs
