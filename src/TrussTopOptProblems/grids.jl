@@ -49,27 +49,28 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dic
 
     # * Generate cells, Line2d or Line3d
     CellType = Cell{xdim,2,2}
-    cells = CellType[]
+    cells = Vector{CellType}(undef, length(elements))
     for (e_ind, element) in elements
-        push!(cells, CellType((element...,)))
+        cells[e_ind] = CellType((element...,))
     end
 
     # * Generate nodes
-    nodes = Node{xdim,T}[]
+    nodes = Vector{Node{xdim,T}}(undef, length(node_points))
     for (n_id, node_point) in node_points
-        push!(nodes, Node((node_point...,)))
+        nodes[n_id] = Node((node_point...,))
     end
 
-    # * label boundary (cell, face)
-    cell_from_node = node_neighbors(cells)
-    boundary_conditions = Tuple{Int,Int}[]
-    for (v, _) in boundary
-        for c in cell_from_node[v]
-            # TODO this is not correct, v should be 1 or 2
-            push!(boundary_conditions, (c, v))
-        end
-    end
-    boundary_matrix = JuAFEM.boundaries_to_sparse(boundary_conditions)
+    # ? not sure if we need to define boundary matrix in truss problems
+    # # * label boundary (cell, face)
+    # cell_from_node = node_neighbors(cells)
+    # boundary_conditions = Tuple{Int,Int}[]
+    # for (v, _) in boundary
+    #     for c in cell_from_node[v]
+    #         # TODO this is not correct, v should be 1 or 2
+    #         push!(boundary_conditions, (c, v))
+    #     end
+    # end
+    # boundary_matrix = JuAFEM.boundaries_to_sparse(boundary_conditions)
 
     # * label loaded facesets
 
@@ -77,7 +78,8 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dic
     # facesets = Dict("left"  => Set{Tuple{Int,Int}}([boundary[1]]),
     #                 "right" => Set{Tuple{Int,Int}}([boundary[2]]))
 
-    return Grid(cells, nodes, boundary_matrix=boundary_matrix)
+    return Grid(cells, nodes)
+    # , boundary_matrix=boundary_matrix
     # return Grid(cells, nodes, facesets=facesets, 
     #     boundary_matrix=boundary_matrix)
 end

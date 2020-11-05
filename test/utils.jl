@@ -122,7 +122,7 @@ function compute_permutation(dof_stat)
             error("Wrong value: $(dof_stat[i])")
         end
     end
-    @show id_map_RO
+    # @show id_map_RO
 
     iT = Int
     T = Float64

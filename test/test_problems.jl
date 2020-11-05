@@ -72,26 +72,32 @@ for cell in CellIterator(getdh(problem))
     Ke = elementinfo.Kes[cellidx]
     @test Ke_m ≈ Ke
     
-    Ke_book = matrix_from_upper(book_Ks[cellidx]...)
-    Ke_diff = (Ke_book .- Ke) ./ Ke_book
-    # @test all((Ke_diff .< 1e-5) .| (Ke_diff .== NaN))
-    @test all((Ke_diff .< 1e-5) .| ((Ke_book .≈ 0) .& (Ke .≈ 0)))
+    # Ke_book = matrix_from_upper(book_Ks[cellidx]...)
+    # Ke_diff = (Ke_book .- Ke) ./ Ke_book
+    # # @test all((Ke_diff .< 1e-5) .| (Ke_diff .== NaN))
+    # @test all((Ke_diff .< 1e-5) .| ((Ke_book .≈ 0) .& (Ke .≈ 0)))
 end
 
 # we use kN for force and m for length
 # thus, pressure/modulus is in kN/m
+# problem.metadata.cell_dofs .= dof_from_element'
+
 solver = FEASolver(Displacement, Direct, problem)
 solver()
 
 n_fixed_dof = sum(dof_stat)
 n_free_dof = length(dof_stat)-n_fixed_dof
+
+# ! something wrong with the force dof
+@show solver.globalinfo.f
 # force vector free dof portion
 @show P_f = solver.globalinfo.f[1:n_free_dof]
 
 # * TO solver result
 to_K_full = solver.globalinfo.K.data
 @show to_K_ff = Array(to_K_full[1:n_free_dof,1:n_free_dof])
-@show to_u = solver.u[1:n_free_dof]
+@show to_u = solver.u
+# @show to_u = to_K_ff \ P_f
 println("---")
 
 # * manual construction
