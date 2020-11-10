@@ -1,8 +1,8 @@
-using AbstractPlotting
+using AbstractPlotting:  linesegments!, Point2f0, Point3f0
+using AbstractPlotting.MakieLayout
 using TopOpt.TopOptProblems: getdim
-# TODO: build a MakieLayout
 
-function draw_truss_problem!(scene, problem::TrussProblem;
+function draw_truss_problem!(scene, layout, problem::TrussProblem;
     area=nothing, stress=nothing, line_width::Float64=1.0, 
     draw_supp::Bool=true, supp_scale::Float64=0.1,
     xaxis_label::String="x", plot_limits=undef)
@@ -46,16 +46,29 @@ function draw_truss_problem!(scene, problem::TrussProblem;
     nodes = problem.truss_grid.grid.nodes
     PtT = ndim == 2 ? Point2f0 : Point3f0
     edges_pts = [PtT(nodes[cell.nodes[1]].x) => PtT(nodes[cell.nodes[2]].x) for cell in problem.truss_grid.grid.cells]
-    @show edges_pts
+    # @show edges_pts
 
-    linesegments!(scene, edges_pts, 
+    ax1 = layout[1, 1] = LAxis(scene) #, title = "Axis 1")
+    tightlimits!(ax1)
+    # ax1.title = "AxisAspect(1)"
+    ax1.aspect = AxisAspect(1)
+
+    # http://juliaplots.org/MakieReferenceImages/gallery//tutorial_linesegments/index.html
+    linesegments!(ax1, edges_pts, 
                 #   linewidth = a,
                   color = color,
                 #   limits = plot_limits,
-                  axis = (names = (axisnames = (xaxis_label, "y"),),
-                          grid = (linewidth = (1, 1),),
-                          )
+                #   axis = (names = (axisnames = (xaxis_label, "y"),),
+                #           grid = (linewidth = (1, 1),),
+                #           )
                   )
+
+    # if ndim == 2
+    #     axis = scene[Axis2D]
+    # else
+    #     axis = scene[Axis3D]
+    # end
+    # axis[:scale] = (1.0, 1.0, 1.0)
 
     # if draw_supp
     #     fix_ids = findall(x->x==1, S)

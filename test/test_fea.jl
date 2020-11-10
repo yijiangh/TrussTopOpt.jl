@@ -5,9 +5,10 @@ using JuAFEM: cellid, getcoordinates, CellIterator
 
 using TopOpt
 using TopOpt.TopOptProblems: boundingbox, nnodespercell, getgeomorder, getmetadata, getdh, getE, getdim
+using TrussTopOpt.TrussTopOptProblems
 using TrussTopOpt.TrussTopOptProblems: getcrosssecs, default_quad_order
 
-# include("utils.jl")
+include("utils.jl")
 
 problem_json = ["mgz_truss1.json", "mgz_truss2.json", "mgz_truss3.json"]
 u_solutions = [
