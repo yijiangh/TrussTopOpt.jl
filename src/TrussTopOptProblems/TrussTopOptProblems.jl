@@ -22,10 +22,11 @@ include("matrices_and_vectors.jl")
 include("elementinfo.jl")
 include(joinpath("TrussIO", "TrussIO.jl"))
 using .TrussIO
-include("makie.jl")
+include(joinpath("TrussPlotting", "TrussPlotting.jl"))
+using .TrussPlotting
 
 export TrussGrid, TrussProblem
 export parse_truss_json, parse_support_load_json
-export draw_truss_problem!
+export draw_truss_problem!, draw_truss_problem
 
 end # module

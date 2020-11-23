@@ -2,7 +2,7 @@ module TrussTopOpt
 
 using Reexport
 
-# Topopology optimization problem definitions
+# Topology optimization problem definitions
 include(joinpath("TrussTopOptProblems", "TrussTopOptProblems.jl"))
 
 @reexport using .TrussTopOptProblems

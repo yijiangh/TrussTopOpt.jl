@@ -1,33 +1,30 @@
 using TopOpt
-# using TrussTopOpt
-# using TrussTopOpt.TrussTopOptProblems: draw_truss_problem!
-# using Makie
-# using AbstractPlotting.MakieLayout
+using TrussTopOpt
+using Makie
 
 ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 # ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
 # @testset "Tim problem to solve"
-    # file_name = "tim.json"
-    # # file_name = "mgz_truss1.json"
-    # truss_file = joinpath(ins_dir, file_name)
-    # load_supp_file = joinpath(ins_dir, split(file_name, ".json")[1]*"_load_support.json");
+    file_name = "tim.json"
+    # file_name = "mgz_truss1.json"
+    problem_file = joinpath(ins_dir, file_name)
 
-    # ndim, nnodes, ncells, node_points, elements, E, crosssecs = parse_truss_json(truss_file);
-    # loads, boundary = parse_support_load_json(load_supp_file);
+    ndim, nnodes, ncells, node_points, elements, E, crosssecs = parse_truss_json(truss_file);
+    loads, boundary = parse_support_load_json(load_supp_file);
 
-    # problem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary, E, crosssecs);
+    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary, E, crosssecs);
 
     # scene, layout = layoutscene(resolution = (1200, 900))
     # draw_truss_problem!(scene, layout, problem)
     # display(scene)
 
-    E = 1.0 # Young’s modulus
-    v = 0.3 # Poisson’s ratio
-    f = 1.0; # downward force
+    # E = 1.0 # Young’s modulus
+    # v = 0.3 # Poisson’s ratio
+    # f = 1.0; # downward force
 
-    nels = (12, 6, 6) # change to (40, 20, 20) for a more high-res result
-    problem = PointLoadCantilever(Val{:Linear}, nels, (1.0, 1.0, 1.0), E, v, f);
+    # nels = (12, 6, 6) # change to (40, 20, 20) for a more high-res result
+    # problem = PointLoadCantilever(Val{:Linear}, nels, (1.0, 1.0, 1.0), E, v, f);
 
     V = 0.3 # volume fraction
     xmin = 0.001 # minimum density
@@ -39,6 +36,9 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
     # TODO plot analysis result
 
+    # TopOpt.LogBarrier
+    # linear_elasticity, du/dx
+    # Compliance
     obj = Objective(TopOpt.Compliance(problem, solver, filterT = nothing,
         rmin = rmin, tracing = true, logarithm = false));
 
@@ -53,7 +53,8 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
     simp = SIMP(optimizer, penalty.p);
 
-    x0 = fill(1.0, length(solver.vars))
+    # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape from infeasible regions and return a result
+    x0 = fill(0.5, length(solver.vars))
     result = simp(x0);
 
     # TODO: use draw_truss!
