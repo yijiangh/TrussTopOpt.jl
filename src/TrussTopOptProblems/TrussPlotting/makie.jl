@@ -66,13 +66,13 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
         Ref(LinRange(0.01:0.01:10)); # same range for every slider via broadcast
         # formats = [x -> "$(round(x, digits = 2))$s" for s in ["", "", ""]],
         # width = 350,
-        # tellheight = false)
+        tellheight = false,
     )
     set_close_to!(lsgrid.sliders[1], 1.0)
     set_close_to!(lsgrid.sliders[2], 1.0)
-    set_close_to!(lsgrid.sliders[3], 0.01)
-    set_close_to!(lsgrid.sliders[4], 1.0)
-    set_close_to!(lsgrid.sliders[5], 1.0)
+    set_close_to!(lsgrid.sliders[3], 0.2)
+    set_close_to!(lsgrid.sliders[4], 6.0)
+    set_close_to!(lsgrid.sliders[5], 6.0)
     arrow_size = lift(s -> s, lsgrid.sliders[3].value)
     arrow_linewidth = lift(s -> s, lsgrid.sliders[4].value)
     layout[2, 1] = lsgrid.layout

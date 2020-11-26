@@ -18,8 +18,8 @@ u_solutions = [
 ]
 ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
-# @testset "Truss problem solve - $(problem_json[i])" for i in 1:length(problem_json)
-    i = 2
+@testset "Truss problem solve - $(problem_json[i])" for i in 1:length(problem_json)
+    # i = 2
     file_name = problem_json[i]
     problem_file = joinpath(ins_dir, file_name)
 
@@ -69,4 +69,4 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     to_K_full = solver.globalinfo.K.data
     @assert norm(solver.u - u_solutions[i]) < 3e-4
 
-# end # end test set
+end # end test set
