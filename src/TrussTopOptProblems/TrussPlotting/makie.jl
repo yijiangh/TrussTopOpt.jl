@@ -5,7 +5,7 @@ using TrussTopOpt.TrussTopOptProblems: TrussProblem
 using JuAFEM
 
 """
-    scene, layout = draw_truss_problem(problem; area=result.topology)
+    scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
 """
 function draw_truss_problem(problem::TrussProblem; kwargs...)
     scene, layout = layoutscene() #resolution = (1200, 900)
@@ -15,13 +15,13 @@ function draw_truss_problem(problem::TrussProblem; kwargs...)
 end
 
 function draw_truss_problem!(scene, layout, problem::TrussProblem;
-    area=nothing, stress=nothing, linewidth::Float64=6.0)
+    crosssecs=nothing, stress=nothing, linewidth::Float64=6.0)
     ndim = getdim(problem)
     ncells = JuAFEM.getncells(problem)
 
-    if area !== nothing
-        @assert(ncells == length(area))
-        a = reshape([area area]', 2*ncells)
+    if crosssecs !== nothing
+        @assert(ncells == length(crosssecs))
+        a = reshape([crosssecs crosssecs]', 2*ncells)
         # a ./= maximum(a)
         a .*= linewidth
     else

@@ -10,31 +10,18 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
     # file_name = "mgz_truss1.json"
     problem_file = joinpath(ins_dir, file_name)
 
-    ndim, nnodes, ncells, node_points, elements, E, crosssecs = parse_truss_json(truss_file);
-    loads, boundary = parse_support_load_json(load_supp_file);
+    node_points, elements, Es, crosssecs, fixities, load_cases = parse_truss_json(problem_file);
+    loads = load_cases["0"]
 
-    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary, E, crosssecs);
+    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, fixities, Es, crosssecs);
 
-    # scene, layout = layoutscene(resolution = (1200, 900))
-    # draw_truss_problem!(scene, layout, problem)
-    # display(scene)
-
-    # E = 1.0 # Young’s modulus
-    # v = 0.3 # Poisson’s ratio
-    # f = 1.0; # downward force
-
-    # nels = (12, 6, 6) # change to (40, 20, 20) for a more high-res result
-    # problem = PointLoadCantilever(Val{:Linear}, nels, (1.0, 1.0, 1.0), E, v, f);
-
-    V = 0.3 # volume fraction
-    xmin = 0.001 # minimum density
-    rmin = 4.0; # density filter radius
+    ndim = length(node_points[1])
+    nnodes = length(node_points)
+    ncells = length(elements)
 
     penalty = TopOpt.PowerPenalty(1.0) # 3
     solver = FEASolver(Displacement, Direct, problem, xmin = xmin,
         penalty = penalty);
-
-    # TODO plot analysis result
 
     # TopOpt.LogBarrier
     # linear_elasticity, du/dx
@@ -53,12 +40,12 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
     simp = SIMP(optimizer, penalty.p);
 
-    # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape from infeasible regions and return a result
+    # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape 
+    # from infeasible regions and return a result
     x0 = fill(0.5, length(solver.vars))
     result = simp(x0);
 
-    # TODO: use draw_truss!
-    # result_mesh = GeometryBasics.Mesh(problem, result.topology);
-    # mesh(result_mesh);
+    scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
+    display(scene)
 
 # end # end testset

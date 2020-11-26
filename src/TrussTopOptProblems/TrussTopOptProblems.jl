@@ -26,7 +26,7 @@ include(joinpath("TrussPlotting", "TrussPlotting.jl"))
 using .TrussPlotting
 
 export TrussGrid, TrussProblem
-export parse_truss_json, parse_support_load_json
+export parse_truss_json
 export draw_truss_problem!, draw_truss_problem
 
 end # module
