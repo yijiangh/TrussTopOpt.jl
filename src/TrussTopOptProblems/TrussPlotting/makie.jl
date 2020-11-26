@@ -1,8 +1,10 @@
 using AbstractPlotting: linesegments!, Point2f0, Point3f0
 using AbstractPlotting.MakieLayout
+using Makie
 using TopOpt.TopOptProblems: getdim
-using TrussTopOpt.TrussTopOptProblems: TrussProblem
+using TrussTopOpt.TrussTopOptProblems: TrussProblem, get_fixities_node_set_name
 using JuAFEM
+using LinearAlgebra: norm
 
 """
     scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
@@ -23,9 +25,8 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
         @assert(ncells == length(crosssecs))
         a = reshape([crosssecs crosssecs]', 2*ncells)
         # a ./= maximum(a)
-        a .*= linewidth
     else
-        a = ones(ncells) * linewidth
+        a = ones(2*ncells)
     end
     if stress !== nothing
         @assert(ncells == length(stress))
@@ -46,76 +47,72 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
     PtT = ndim == 2 ? Point2f0 : Point3f0
     edges_pts = [PtT(nodes[cell.nodes[1]].x) => PtT(nodes[cell.nodes[2]].x) for cell in problem.truss_grid.grid.cells]
 
+    if ndim == 2
+        ax1 = layout[1, 1] = LAxis(scene)
+        # tightlimits!(ax1)
+        # ax1.aspect = AxisAspect(1)
+        ax1.aspect = DataAspect()
+    else
+        # https://jkrumbiegel.github.io/MakieLayout.jl/v0.3/layoutables/#LScene-1
+        # https://makie.juliaplots.org/stable/cameras.html#D-Camera
+        ax1 = layout[1, 1] = LScene(scene, camera = cam3d!, raw = false)
+    end
     # TODO show the ground mesh in another LAxis https://makie.juliaplots.org/stable/makielayout/grids.html
-    ax1 = layout[1, 1] = LAxis(scene) #, title = "Axis 1")
-    tightlimits!(ax1)
     # ax1.title = "Truss TopOpt result"
-    # ax1.aspect = AxisAspect(1)
-    ax1.aspect = DataAspect()
 
+    # sl1 = layout[2, 1] = LSlider(scene, range = 0.01:0.01:10, startvalue = 1.0)
+    lsgrid = labelslidergrid!(scene,
+        ["support scale", "load scale", "arrow size", "vector linewidth", "element linewidth"],
+        Ref(LinRange(0.01:0.01:10)); # same range for every slider via broadcast
+        # formats = [x -> "$(round(x, digits = 2))$s" for s in ["", "", ""]],
+        # width = 350,
+        # tellheight = false)
+    )
+    set_close_to!(lsgrid.sliders[1], 1.0)
+    set_close_to!(lsgrid.sliders[2], 1.0)
+    set_close_to!(lsgrid.sliders[3], 0.01)
+    set_close_to!(lsgrid.sliders[4], 1.0)
+    set_close_to!(lsgrid.sliders[5], 1.0)
+    arrow_size = lift(s -> s, lsgrid.sliders[3].value)
+    arrow_linewidth = lift(s -> s, lsgrid.sliders[4].value)
+    layout[2, 1] = lsgrid.layout
+
+    # * draw element
     # http://juliaplots.org/MakieReferenceImages/gallery//tutorial_linesegments/index.html
+    element_linewidth = lift(s -> a.*s, lsgrid.sliders[5].value)
     linesegments!(ax1, edges_pts, 
-                  linewidth = a,
+                  linewidth = element_linewidth,
                   color = color)
 
-    # if ndim == 2
-    #     axis = scene[Axis2D]
-    # else
-    #     axis = scene[Axis3D]
-    # end
-    # axis[:scale] = (1.0, 1.0, 1.0)
-
-    # if draw_supp
-    #     fix_ids = findall(x->x==1, S)
-    #     for s in fix_ids
-    #         if 1 == s[2]
-    #             # x dir
-    #             arrows!(scene, [X[s[1], 1]], [X[s[1], 2]], [supp_scale], [0], linecolor = :green, arrowcolor = :green, limits = plot_limits,
-    #             # linewidth = supp_scale*10,
-    #             arrowsize = 0.1,
-    #             )
-    #         end
-    #         if 2 == s[2]
-    #             # y dir
-    #             arrows!(scene, [X[s[1], 1]], [X[s[1], 2]], [0], [supp_scale], linecolor = :green, arrowcolor = :green, limits = plot_limits,
-    #             # linewidth = supp_scale*10,
-    #             arrowsize = 0.1,
-    #             )
-    #         end
-    #         # if 1 == S[i,4]
-    #         #     scatter!(scene, [X[S[i,1], 1]], [X[S[i,1], 2]], color = :green, markersize=supp_scale, marker=:x, limits = plot_limits)
-    #         # else
-    #         #     scatter!(scene, [X[S[i,1], 1]], [X[S[i,1], 2]], color = :green, markersize=supp_scale, marker=:circle, limits = plot_limits)
-    #         # end
-    #     end
-    # end
-    # axis = scene[Axis]
-    # axis[:grid][:linewidth] = (1, 1)
-end
-
-function draw_load!(scene, X::Matrix{Float64}, F::Matrix{Float64}; load_scale::Float64=0.1, xaxis_label::String="x", plot_limits=undef)
-    if plot_limits == undef
-        max_xlim = maximum(X[:,1]) - minimum(X[:,1])
-        max_ylim = maximum(X[:,2]) - minimum(X[:,2])
-        max_lim = max(max_xlim, max_ylim)
-        plot_limits = FRect(minimum(X[:,1]), minimum(X[:,2]),
-                       max_lim, max_lim)
+    # fixties vectors
+    for i=1:ndim
+        nodeset_name = get_fixities_node_set_name(i)
+        fixed_node_ids = JuAFEM.getnodeset(problem.truss_grid.grid, nodeset_name)
+        dir = zeros(ndim)
+        dir[i] = 1.0
+        scaled_base_pts = lift(s->[PtT(nodes[node_id].x) - PtT(dir*s) for node_id in fixed_node_ids], 
+            lsgrid.sliders[1].value)
+        scaled_fix_dirs = lift(s->fill(PtT(dir*s), length(fixed_node_ids)), lsgrid.sliders[1].value)
+        Makie.arrows!(
+            ax1,
+            scaled_base_pts,
+            scaled_fix_dirs,
+            arrowcolor=:orange,
+            arrowsize=arrow_size,
+            linecolor=:orange,
+            linewidth=arrow_linewidth,
+        )
     end
-
-    for i=1:size(F,1)
-        if any(i -> i!=0, F[i,:])
-            arrows!(scene, [X[i, 1]],
-                           [X[i, 2]],
-                           [F[i,1]*load_scale],
-                           [F[i,2]*load_scale],
-                           linecolor = :orange, arrowcolor = :orange,
-                           # linewidth = load_scale*10,
-                           arrowsize = 0.1,
-                           limits = plot_limits,
-                           axis = (names = (axisnames = (xaxis_label, "y"),),)
-                           )
-         end
-    end
-    # axis = scene[Axis]
-    # axis[:grid][:linewidth] = (1, 1)
+    # load vectors
+    scaled_load_dirs = lift(s->[PtT(force/norm(force)*s) for force in values(problem.force)], 
+        lsgrid.sliders[2].value)
+    Makie.arrows!(
+        ax1,
+        [PtT(nodes[node_id].x) for node_id in keys(problem.force)],
+        scaled_load_dirs,
+        arrowcolor=:purple,
+        arrowsize=arrow_size,
+        linecolor=:purple,
+        linewidth=arrow_linewidth,
+    )
 end

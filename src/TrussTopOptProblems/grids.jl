@@ -1,5 +1,4 @@
 using TopOpt.TopOptProblems: AbstractGrid
-
 const Vec = JuAFEM.Vec
 
 # @params struct TrussGrid{xdim,N,M,C<:JuAFEM.Cell{xdim,N,M},T} <: AbstractGrid{xdim, T}

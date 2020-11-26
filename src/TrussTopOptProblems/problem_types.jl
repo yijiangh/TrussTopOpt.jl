@@ -1,5 +1,7 @@
 using TopOpt.TopOptProblems: StiffnessTopOptProblem, Metadata
 
+get_fixities_node_set_name(i) = "fixed_u$(i)"
+
 # @params
 struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
     truss_grid::TrussGrid{xdim,T,N,M} # ground truss mesh
@@ -59,8 +61,8 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
 
     # * support nodeset
     for i=1:xdim
-        if haskey(truss_grid.grid.nodesets, "fixed_u$i")
-            pop!(truss_grid.grid.nodesets, "fixed_u$i")
+        if haskey(truss_grid.grid.nodesets, get_fixities_node_set_name(i))
+            pop!(truss_grid.grid.nodesets, get_fixities_node_set_name(i))
         end
         support_nodesets = Set{Int}()
         for (nodeidx, condition) in supports
@@ -68,7 +70,7 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
                 push!(support_nodesets, nodeidx)
             end
         end
-        addnodeset!(truss_grid.grid, "fixed_u$i", support_nodesets)
+        addnodeset!(truss_grid.grid, get_fixities_node_set_name(i), support_nodesets)
     end
 
     # Create displacement field u
@@ -88,7 +90,7 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
 
     ch = ConstraintHandler(dh)
     for i=1:xdim
-        dbc = Dirichlet(:u, getnodeset(truss_grid.grid, "fixed_u$i"), (x,t)->T[0], [i])
+        dbc = Dirichlet(:u, getnodeset(truss_grid.grid, get_fixities_node_set_name(i)), (x,t)->T[0], [i])
         add!(ch, dbc)
     end
     close!(ch)
