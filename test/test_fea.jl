@@ -20,17 +20,17 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
 @testset "Truss problem solve - $(problem_json[i])" for i in 1:length(problem_json)
     file_name = problem_json[i]
-    truss_file = joinpath(ins_dir, file_name)
-    load_supp_file = joinpath(ins_dir, split(file_name, ".json")[1]*"_load_support.json");
+    problem_file = joinpath(ins_dir, file_name)
 
-    ndim, nnodes, ncells, node_points, elements, E, crosssecs = parse_truss_json(truss_file);
-    loads, boundary = parse_support_load_json(load_supp_file);
+    node_points, elements, Es, crosssecs, fixities, load_cases = parse_truss_json(problem_file);
+    ndim, nnodes, ncells = length(node_points[1]), length(node_points), length(elements)
+    loads = load_cases["0"]
 
-    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, boundary, E, crosssecs);
+    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, fixities, Es, crosssecs);
 
     @test getdim(problem) == ndim
     @test JuAFEM.getncells(problem) == ncells
-    @test problem.E == E
+    @test problem.E == Es
     @test problem.black == problem.white == falses(ncells)
     @test problem.force == loads
     @test problem.varind == 1:ncells
@@ -50,7 +50,7 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
         @test elementinfo.cellvolumes[cellidx] ≈ L * A
 
         Γ = global2local_transf_matrix(coords...)
-        Ke_m = (A*E[cellidx]/L)*Γ'*[1 -1; -1 1]*Γ
+        Ke_m = (A*Es[cellidx]/L)*Γ'*[1 -1; -1 1]*Γ
         Ke = elementinfo.Kes[cellidx]
         @test Ke_m ≈ Ke
     end
@@ -58,6 +58,8 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     solver = FEASolver(Displacement, Direct, problem)
     solver()
 
+    # TODO plot analysis result with
+    # scene, layout = draw_truss_problem(problem; crosssecs=result.topology, stress=???)
 
     # we use kN for force and m for length
     # thus, pressure/modulus is in kN/m
@@ -67,35 +69,3 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     @assert norm(solver.u - u_solutions[i]) < 3e-4
 
 end # end test set
-
-    # n_fixed_dof = sum(dof_stat)
-    # n_free_dof = length(dof_stat)-n_fixed_dof
-
-    # # * manual construction
-    # build_K_full = assemble_global_stiffness_matrix(elementinfo.Kes, nnodes, dof_from_element)
-    # Perm = compute_permutation(dof_stat)
-    # build_K = Perm*build_K_full*Perm'
-    # @show build_K_ff = Array(build_K[1:n_free_dof,1:n_free_dof])
-    # @show build_u = build_K_ff \ P_f
-    # @assert build_K_ff*build_u ≈ P_f
-    # println("---")
-
-    # @assert book_u ≈ solver.u[1:3]
-    # @assert book_K ≈ solver.globalinfo.K.data[1:3, 1:3]
-
-    # ! specific for "tim.json"
-    # corners = [[0.0, 0.0], [8.5, 1.0]]
-    # for i in 1:2, j in 1:2
-    #     @test boundingbox(grid)[i][j] ≈ corners[i][j] atol = 1e-8
-    # end
-    # @test length(grid.boundary_matrix.nzval) == length(boundary) * 2
-
-    # metadata = getmetadata(problem)
-    # truss2
-    # dof_from_element = [1 2 3 4; 1 2 5 6]
-    # dof_stat = [0,0,1,1,1,1]
-
-    # truss3
-    # dof_from_element = [1 2 3 4; 1 2 5 6; 3 4 5 6]
-    # dof_stat = [0,0,0,1,1,1]
-

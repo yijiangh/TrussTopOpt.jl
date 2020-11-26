@@ -73,7 +73,6 @@ function _LinearTrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dic
     # boundary_matrix = JuAFEM.boundaries_to_sparse(boundary_conditions)
 
     # * label loaded facesets
-
     # # Cell face sets
     # facesets = Dict("left"  => Set{Tuple{Int,Int}}([boundary[1]]),
     #                 "right" => Set{Tuple{Int,Int}}([boundary[2]]))

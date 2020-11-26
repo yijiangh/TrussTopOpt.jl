@@ -9,22 +9,22 @@ function parse_truss_json(file_path::String)
     T = Float64
 
     node_points = Dict{iT, SVector{ndim, T}}()
-    for i=1:n
-        node_points[i] = convert(SVector{ndim,T}, data["nodes"][i]["point"])
-        if "node_ind" in keys(data["nodes"][i])
-            @assert data["nodes"][i]["node_ind"] == i
+    for (i, ndata) in enumerate(data["nodes"])
+        node_points[i] = convert(SVector{ndim,T}, ndata["point"])
+        if "node_ind" in keys(ndata)
+            @assert ndata["node_ind"] == i
         end
     end
     @assert length(node_points) == n
 
     elements = Dict{iT, Tuple{iT,iT}}()
     element_inds_from_tag = Dict()
-    for i=1:m
-        elements[i] = (data["elements"][i]["end_node_inds"]...,)
-        if "elem_ind" in keys(data["elements"][i])
-            @assert data["elements"][i]["elem_ind"] == i
+    for (i, edata) in enumerate(data["elements"])
+        elements[i] = (edata["end_node_inds"]...,)
+        if "elem_ind" in keys(edata)
+            @assert edata["elem_ind"] == i
         end
-        elem_tag = data["elements"][i]["elem_tag"]
+        elem_tag = edata["elem_tag"]
         if elem_tag ∉ keys(element_inds_from_tag)
             element_inds_from_tag[elem_tag] = []
         end
@@ -34,43 +34,52 @@ function parse_truss_json(file_path::String)
 
     E_from_tag = Dict()
     for mat in data["materials"]
+        # if elem_tag list has length 0, use tag `nothing`
         mat["elem_tags"] = length(mat["elem_tags"]) == 0 ? [nothing] : mat["elem_tags"]
         for e_tag in mat["elem_tags"]
             if e_tag in keys(E_from_tag)
                 @warn "Multiple materials assigned to the same element tag |$(e_tag)|!"
             end
-            E_from_tag[e_tag] = mat["E"]
+            E_from_tag[e_tag] = T(mat["E"])
         end
     end
     A_from_tag = Dict()
     for cs in data["cross_secs"]
+        # if elem_tag list has length 0, use tag `nothing`
         cs["elem_tags"] = length(cs["elem_tags"]) == 0 ? [nothing] : cs["elem_tags"]
         for e_tag in cs["elem_tags"]
             if e_tag in keys(A_from_tag)
                 @warn "Multiple cross secs assigned to the same element tag |$(e_tag)|!"
             end
-            A_from_tag[e_tag] = cs["A"]
+            A_from_tag[e_tag] = T(cs["A"])
         end
     end
     Es = zeros(T, m)
     As = zeros(T, m)
     for (tag, e_ids) in element_inds_from_tag
+        # @show tag, e_ids
         for ei in e_ids
-            if tag ∉ keys(E_from_tag)
+            if !(tag ∈ keys(A_from_tag))
+                # use default material (key `nothing`)
+                As[ei] = A_from_tag[nothing]
+            else
+                As[ei] = A_from_tag[tag]
+            end
+            if !(tag ∈ keys(E_from_tag))
                 # use default material (key `nothing`)
                 Es[ei] = E_from_tag[nothing]
-                As[ei] = A_from_tag[nothing]
+            else
+                Es[ei] = E_from_tag[tag]
             end
         end
     end
 
-    n_supp_nodes = length(data["supports"])
     # TODO only translation dof for now
-    @assert(n_supp_nodes > 0)
+    @assert(length(data["supports"]) > 0)
     fixities = Dict{iT, SVector{ndim, Bool}}()
-    for i=1:n_supp_nodes
-        supp_v = iT(data["supports"][i]["node_ind"])
-        fixities[supp_v] = data["supports"][i]["condition"]
+    for sdata in data["supports"]
+        supp_v = iT(sdata["node_ind"])
+        fixities[supp_v] = sdata["condition"]
     end
 
     load_cases = Dict()

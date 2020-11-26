@@ -8,40 +8,105 @@
   "dimension": 3,
   "node_num": 5,
   "element_num": 4,
-  "node_list": [
+  "nodes": [
     {
       "point": [2, 4, 8],
-      "node_id": 1
+      "node_ind": 1
     },
     {
       "point": [0, 0, 0],
-      "node_id": 2
+      "node_ind": 2
     },
     {
       "point": [8, 0, 0],
-      "node_id": 3
+      "node_ind": 3
     },
     {
       "point": [8, 6, 0],
-      "node_id": 4
+      "node_ind": 4
     },
     {
       "point": [0, 6, 0],
-      "node_id": 5
+      "node_ind": 5
     }
   ],
-  "element_list": [
-    [1 , 2],
-    [1 , 3],
-    [1 , 4],
-    [1 , 5]
+  "elements": [
+    {"end_node_inds" : [1 , 2], "elem_tag" : "ab"},
+    {"end_node_inds" : [1 , 3], "elem_tag" : "ac"},
+    {"end_node_inds" : [1 , 4], "elem_tag" : "ad"},
+    {"end_node_inds" : [1 , 5], "elem_tag" : "ae"}
   ],
-  "crosssecs" : [
-    0.02, 0.03, 0.04, 0.03
+  "loadcases": {
+    "0": {
+      "lc_ind": 0,
+      "ploads": [
+        {
+          "force": [
+            200, 600, -800
+          ],
+          "force_unit": "kN",
+          "node_ind": 1,
+          "loadcase": 0
+        }
+      ]
+    }
+  },
+  "supports": [
+    {
+      "node_ind": 2,
+      "condition": [1, 1, 1]
+    },
+    {
+      "node_ind": 3,
+      "condition": [1, 1, 1]
+    },
+    {
+      "node_ind": 4,
+      "condition": [1, 1, 1]
+    },
+    {
+      "node_ind": 5,
+      "condition": [1, 1, 1]
+    }
   ],
-  "crosssec_unit": "m2",
-  "E": [
-    2e8, 2e8, 2e8, 2e8
+  "cross_secs": [
+    {
+      "family": "",
+      "name": "",
+      "elem_tags": ["ab"],
+      "A": 0.02,
+      "A_unit": "m2"
+    },
+    {
+      "family": "",
+      "name": "",
+      "elem_tags": ["ac"],
+      "A": 0.03,
+      "A_unit": "m2"
+    },
+    {
+      "family": "",
+      "name": "",
+      "elem_tags": ["ad"],
+      "A": 0.04,
+      "A_unit": "m2"
+    },
+    {
+      "family": "",
+      "name": "",
+      "elem_tags": ["ae"],
+      "A": 0.03,
+      "A_unit": "m2"
+    }
   ],
-  "E_unit" : "kN/m2"
+  "materials": [
+    {
+      "family": "DummyMaterial",
+      "name": "DummyMaterial",
+      "type_name": "ISO",
+      "elem_tags": [],
+      "E": 2e8,
+      "E_unit": "kN/m2"
+    }
+  ]
 }

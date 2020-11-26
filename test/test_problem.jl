@@ -3,21 +3,18 @@ using TrussTopOpt
 using Makie
 
 ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
-# ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
-# @testset "Tim problem to solve"
+@testset "Tim problem to solve" for lc_ind in [0, 1]
     file_name = "tim.json"
-    # file_name = "mgz_truss1.json"
     problem_file = joinpath(ins_dir, file_name)
 
     node_points, elements, Es, crosssecs, fixities, load_cases = parse_truss_json(problem_file);
-    loads = load_cases["0"]
+    loads = load_cases[string(lc_ind)]
 
     problem = TrussProblem(Val{:Linear}, node_points, elements, loads, fixities, Es, crosssecs);
 
-    ndim = length(node_points[1])
-    nnodes = length(node_points)
-    ncells = length(elements)
+    ndim, nnodes, ncells = length(node_points[1]), length(node_points), length(elements)
+    @test problem.E == Es
 
     penalty = TopOpt.PowerPenalty(1.0) # 3
     solver = FEASolver(Displacement, Direct, problem, xmin = xmin,
@@ -46,6 +43,6 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
     result = simp(x0);
 
     scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
-    display(scene)
+    # display(scene)
 
-# end # end testset
+end # end testset
