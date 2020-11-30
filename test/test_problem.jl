@@ -1,11 +1,14 @@
 using TopOpt
 using TrussTopOpt
 using Makie
+using Base.Iterators
 
 ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
-@testset "Tim problem to solve" for lc_ind in [0, 1]
-    file_name = "tim.json"
+@testset "Tim problem to solve" for (problem_dim, lc_ind) in product(["2d", "3d"], [0, 1])
+    # file_name = "tim.json"
+    # lc_ind = 1
+    file_name = "tim_$(problem_dim).json"
     problem_file = joinpath(ins_dir, file_name)
 
     node_points, elements, Es, crosssecs, fixities, load_cases = parse_truss_json(problem_file);

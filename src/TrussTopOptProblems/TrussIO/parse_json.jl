@@ -12,7 +12,7 @@ function parse_truss_json(file_path::String)
     for (i, ndata) in enumerate(data["nodes"])
         node_points[i] = convert(SVector{ndim,T}, ndata["point"])
         if "node_ind" in keys(ndata)
-            @assert ndata["node_ind"] == i
+            @assert 1 + ndata["node_ind"] == i
         end
     end
     @assert length(node_points) == n
@@ -20,9 +20,9 @@ function parse_truss_json(file_path::String)
     elements = Dict{iT, Tuple{iT,iT}}()
     element_inds_from_tag = Dict()
     for (i, edata) in enumerate(data["elements"])
-        elements[i] = (edata["end_node_inds"]...,)
+        elements[i] = (edata["end_node_inds"]...,) .+ 1
         if "elem_ind" in keys(edata)
-            @assert edata["elem_ind"] == i
+            @assert 1+edata["elem_ind"] == i
         end
         elem_tag = edata["elem_tag"]
         if elem_tag ∉ keys(element_inds_from_tag)
@@ -78,8 +78,8 @@ function parse_truss_json(file_path::String)
     @assert(length(data["supports"]) > 0)
     fixities = Dict{iT, SVector{ndim, Bool}}()
     for sdata in data["supports"]
-        supp_v = iT(sdata["node_ind"])
-        fixities[supp_v] = sdata["condition"]
+        supp_v = iT(sdata["node_ind"])+1
+        fixities[supp_v] = sdata["condition"][1:ndim]
     end
 
     load_cases = Dict()
@@ -88,7 +88,7 @@ function parse_truss_json(file_path::String)
         @assert nploads > 0
         ploads = Dict{iT, SVector{ndim, T}}()
         for pl in lc_data["ploads"]
-            load_v = pl["node_ind"]
+            load_v = pl["node_ind"]+1
             ploads[load_v] = convert(SVector{ndim,T}, pl["force"])
         end
         load_cases[lc_ind] = ploads
