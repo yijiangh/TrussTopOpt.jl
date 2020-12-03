@@ -1,3 +1,4 @@
+using Test
 using TopOpt
 using TrussTopOpt
 using Makie
@@ -5,10 +6,11 @@ using Base.Iterators
 
 ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
-@testset "Tim problem to solve" for (problem_dim, lc_ind) in product(["2d", "3d"], [0, 1])
-    # file_name = "tim.json"
-    # lc_ind = 1
-    file_name = "tim_$(problem_dim).json"
+# @testset "Tim problem to solve" for (problem_dim, lc_ind) in product(["2d", "3d"], [0, 1])
+    problem_dim = "2d"
+    file_name = "tim_2d.json"
+    lc_ind = 1
+    # file_name = "tim_$(problem_dim).json"
     problem_file = joinpath(ins_dir, file_name)
 
     node_points, elements, Es, crosssecs, fixities, load_cases = parse_truss_json(problem_file);
@@ -19,7 +21,11 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
     ndim, nnodes, ncells = length(node_points[1]), length(node_points), length(elements)
     @test problem.E == Es
 
-    penalty = TopOpt.PowerPenalty(1.0) # 3
+    V = 0.3 # volume fraction
+    xmin = 0.001 # minimum density
+    rmin = 4.0; # density filter radius
+
+    penalty = TopOpt.PowerPenalty(1.0) # 1
     solver = FEASolver(Displacement, Direct, problem, xmin = xmin,
         penalty = penalty);
 
@@ -42,10 +48,14 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
     # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape 
     # from infeasible regions and return a result
-    x0 = fill(0.5, length(solver.vars))
+    x0 = fill(V, length(solver.vars))
     result = simp(x0);
+
+    println("="^10)
+    println("tim-$(problem_dim) - LC $(lc_ind) - #elements $(ncells), #dof: $(ncells*ndim): opt iter $(result.fevals)")
+    println("$(result.convstate)")
 
     scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
     # display(scene)
 
-end # end testset
+# end # end testset

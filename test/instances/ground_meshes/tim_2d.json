@@ -343,7 +343,7 @@
      "node_ind": 18, 
      "force": [
       0, 
-      -350
+      -1
      ], 
      "loadcase": 1, 
      "force_unit": "kN"
@@ -356,7 +356,7 @@
     {
      "node_ind": 18, 
      "force": [
-      -350, 
+      -1, 
       0
      ], 
      "loadcase": 0, 

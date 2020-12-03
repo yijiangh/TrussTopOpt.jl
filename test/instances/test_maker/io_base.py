@@ -236,6 +236,7 @@ class Support(object):
 
 class Joint(object):
     def __init__(self, c_conditions, elem_tags):
+        assert len(c_conditions) == 12
         self.c_conditions = c_conditions
         self.elem_tags = elem_tags
 
