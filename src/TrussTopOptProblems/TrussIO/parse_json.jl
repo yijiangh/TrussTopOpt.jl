@@ -1,4 +1,5 @@
 import JSON
+using TrussTopOpt.TrussTopOptProblems: TrussFEACrossSec, TrussFEAMaterial
 
 function parse_truss_json(file_path::String)
     data = JSON.parsefile(file_path)
@@ -33,6 +34,7 @@ function parse_truss_json(file_path::String)
     @assert length(elements) == m
 
     E_from_tag = Dict()
+    ν_from_tag = Dict()
     for mat in data["materials"]
         # if elem_tag list has length 0, use tag `nothing`
         mat["elem_tags"] = length(mat["elem_tags"]) == 0 ? [nothing] : mat["elem_tags"]
@@ -41,6 +43,11 @@ function parse_truss_json(file_path::String)
                 @warn "Multiple materials assigned to the same element tag |$(e_tag)|!"
             end
             E_from_tag[e_tag] = T(mat["E"])
+            if "mu" ∈ keys(mat)
+                ν_from_tag[e_tag] = T(mat["mu"])
+            else
+                ν_from_tag[e_tag] = 0.0
+            end
         end
     end
     A_from_tag = Dict()
@@ -54,23 +61,32 @@ function parse_truss_json(file_path::String)
             A_from_tag[e_tag] = T(cs["A"])
         end
     end
-    Es = zeros(T, m)
-    As = zeros(T, m)
+    mats = TrussFEAMaterial[]
+    crosssecs = TrussFEACrossSec[]
     for (tag, e_ids) in element_inds_from_tag
         # @show tag, e_ids
         for ei in e_ids
             if !(tag ∈ keys(A_from_tag))
                 # use default material (key `nothing`)
-                As[ei] = A_from_tag[nothing]
+                A = A_from_tag[nothing]
             else
-                As[ei] = A_from_tag[tag]
+                A = A_from_tag[tag]
             end
+            push!(crosssecs, TrussFEACrossSec(A))
+
             if !(tag ∈ keys(E_from_tag))
                 # use default material (key `nothing`)
-                Es[ei] = E_from_tag[nothing]
+                E = E_from_tag[nothing]
             else
-                Es[ei] = E_from_tag[tag]
+                E = E_from_tag[tag]
             end
+            if !(tag ∈ keys(ν_from_tag))
+                # use default material (key `nothing`)
+                ν = ν_from_tag[nothing]
+            else
+                ν = ν_from_tag[tag]
+            end
+            push!(mats, TrussFEAMaterial(E, ν))
         end
     end
 
@@ -94,5 +110,5 @@ function parse_truss_json(file_path::String)
         load_cases[lc_ind] = ploads
     end
 
-    return node_points, elements, Es, As, fixities, load_cases
+    return node_points, elements, mats, crosssecs, fixities, load_cases
 end

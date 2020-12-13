@@ -7,7 +7,7 @@ struct TrussGrid{xdim,T,N,M,TG<:JuAFEM.Grid{xdim,<:JuAFEM.Cell{xdim,N,M},T}} <: 
     white_cells::BitVector
     black_cells::BitVector
     constant_cells::BitVector
-    crosssecs::Vector{T}
+    crosssecs::Vector{TrussFEACrossSec{T}}
 end
 # nels::NTuple{dim, Int} # num of elements in x,y,z direction in the ground mesh, not applicable to truss
 # sizes::NTuple{dim, T}  # length of the ground mesh in x,y,z direction, not applicaiton to truss
@@ -20,7 +20,7 @@ nnodes(cell::JuAFEM.Cell) = nnodes(typeof(cell))
 JuAFEM.getncells(tg::TrussGrid) = JuAFEM.getncells(tg.grid)
 
 function TrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-        boundary::Dict{iT, SVector{xdim, fT}}; crosssecs=T(1.0)) where {xdim, T, iT, fT}
+        boundary::Dict{iT, SVector{xdim, fT}}; crosssecs=TrussFEACrossSec{T}(1.0)) where {xdim, T, iT, fT}
     # ::Type{Val{CellType}}, 
     # if CellType === :Linear
     #     geoshape = Line
@@ -33,9 +33,9 @@ function TrussGrid(node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, T
     ncells = getncells(grid)
     if crosssecs isa Vector
         @assert length(crosssecs) == ncells
-        crosssecs = convert(Vector{T}, crosssecs)
-    elseif crosssecs isa Number
-        crosssecs = ones(T, ncells) * T(crosssecs)
+        crosssecs = convert(Vector{TrussFEACrossSec{T}}, crosssecs)
+    elseif crosssecs isa TrussFEACrossSec
+        crosssecs = [TrussFEACrossSec{T}(crosssecs) for i=1:ncells]
     else
         error("Invalid crossecs: $(crossecs)")
     end

@@ -5,7 +5,7 @@ get_fixities_node_set_name(i) = "fixed_u$(i)"
 # @params
 struct TrussProblem{xdim,T,N,M} <: StiffnessTopOptProblem{xdim,T}
     truss_grid::TrussGrid{xdim,T,N,M} # ground truss mesh
-    E::Vector{T} # Young's modulus for each cell
+    materials::Vector{TrussFEAMaterial{T}}
     ch::ConstraintHandler{<:DofHandler{xdim,<:JuAFEM.Cell{xdim,N,M},T},T}
     force::Dict{Int, SVector{xdim, T}}
     black::AbstractVector
@@ -17,12 +17,15 @@ end
 
 gettrussgrid(sp::TrussProblem) = sp.truss_grid
 getJuaFEMgrid(sp::TrussProblem) = sp.truss_grid.grid
-getcrosssecs(sp::TrussProblem) = sp.truss_grid.crosssecs
+
+TopOpt.TopOptProblems.getE(sp::TrussProblem) = [m.E for m in sp.materials]
+TopOpt.TopOptProblems.getν(sp::TrussProblem) = [m.ν for m in sp.materials]
+getA(sp::TrussProblem) = [cs.A for cs in sp.truss_grid.crosssecs]
 
 function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, E=T(1.0), crosssecs=T(1.0)) where {xdim, T, iT, fT, CellType}
+    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, mats=TrussFmatsAMaterial{T}(1.0, 0.3), crosssecs=T(1.0)) where {xdim, T, iT, fT, CellType}
     # unify number type
-    # _T = promote_type(eltype(sizes), typeof(E), typeof(ν), typeof(force))
+    # _T = promote_type(eltype(sizes), typeof(mats), typeof(ν), typeof(force))
     # if _T <: Integer
     #     T = Float64
     # else
@@ -39,13 +42,13 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     ξdim = 1
     ncells = getncells(truss_grid)
 
-    if E isa Vector
-        @assert length(E) == ncells
-        E = convert(Vector{T}, E)
-    elseif E isa Number
-        E = ones(T, ncells) * T(crosssecs)
+    if mats isa Vector
+        @assert length(mats) == ncells
+        mats = convert(Vector{TrussFEAMaterial{T}}, mats)
+    elseif mats isa TrussFEAMaterial
+        mats = [TrussFEAMaterial{T}(mats) for i=1:ncells]
     else
-        error("Invalid E: $(E)")
+        error("Invalid mats: $(mats)")
     end
 
     # * load nodeset
@@ -108,7 +111,7 @@ function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim,
     black, white = find_black_and_white(dh)
     varind = find_varind(black, white)
 
-    return TrussProblem(truss_grid, E, ch, loads, black, white, varind, metadata)
+    return TrussProblem(truss_grid, mats, ch, loads, black, white, varind, metadata)
 end
 
 function Base.show(io::Base.IO, mime::MIME"text/plain", sp::TrussProblem)

@@ -48,10 +48,10 @@ end
 
 function get_cell_volumes(sp::TrussProblem{xdim, T}, cellvalues) where {xdim, T}
     dh = sp.ch.dh
-    crosssecs = sp.truss_grid.crosssecs
+    As = getA(sp)
     cellvolumes = zeros(T, getncells(dh.grid))
     for (i, cell) in enumerate(CellIterator(dh))
-        truss_reinit!(cellvalues, cell, crosssecs[i])
+        truss_reinit!(cellvalues, cell, As[i])
         cellvolumes[i] = sum(JuAFEM.getdetJdV(cellvalues, q_point) for q_point in 1:JuAFEM.getnquadpoints(cellvalues))
     end
     return cellvolumes
