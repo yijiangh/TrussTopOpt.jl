@@ -1,9 +1,11 @@
 # modified from https://github.com/mohamed82008/LinearElasticity.jl
 using Einsum: @einsum
+using LinearAlgebra: I
 
-function get_Kσs(problem::TrussProblem{dim, TT}, dofs, cellvalues) where {dim, TT}
-    # E = YoungsModulus(problem)
-    # ν = PoissonRatio(problem)
+function get_Kσs(problem::TrussProblem{xdim, TT}, dofs, cellvalues) where {xdim, TT}
+    Es = getE(problem)
+    νs = getν(problem)
+    As = getA(problem)
 
     dh = problem.ch.dh
     n = ndofs_per_cell(dh)
@@ -11,31 +13,34 @@ function get_Kσs(problem::TrussProblem{dim, TT}, dofs, cellvalues) where {dim, 
     # element geometric stiffness matrix
     Kσs = [zeros(TT, n, n) for i in 1:getncells(dh.grid)]
     Kσ_e = zeros(TT, n, n)
-    ψ_e = zeros(TT, dim*n, dim*n)
-    G = zeros(TT, dim*n, n)
-    δ = eye(TT, dim)
-    ϵ = zeros(TT, dim, dim)
-    σ = zeros(TT, dim, dim)
-    u = zeros(TT, dim, dim)
+    ψ_e = zeros(TT, xdim*n, xdim*n)
+    G = zeros(TT, xdim*n, n)
+    δ = Matrix{TT}(I, xdim, xdim)
+    ϵ = zeros(TT, xdim, xdim)
+    σ = zeros(TT, xdim, xdim)
+    u = zeros(TT, xdim, xdim)
+
     n_basefuncs = getnbasefunctions(cellvalues)
     for (cellidx, cell) in enumerate(CellIterator(dh))
         Kσ_e .= 0
-        reinit!(cellvalues, cell)
+        truss_reinit!(cellvalues, cell, As[cellidx])
         celldofs!(global_dofs, dh, cellidx)
+        E = Es[cellidx]
+        ν = νs[cellidx]
         for q_point in 1:getnquadpoints(cellvalues)
             dΩ = getdetJdV(cellvalues, q_point)
-            for d in 1:dim
-                ψ_e[(d-1)*dim+1:d*dim, (d-1)*dim+1:d*dim] .= 0
+            for d in 1:xdim
+                ψ_e[(d-1)*xdim+1:d*xdim, (d-1)*xdim+1:d*xdim] .= 0
             end
             for a in 1:n_basefuncs
                 ∇ϕ = shape_gradient(cellvalues, q_point, a)
-                _u = @view dofs[(@view global_dofs[dim*(a-1) + (1:dim)])]
+                _u = @view dofs[(@view global_dofs[xdim*(a-1) .+ (1:xdim)])]
                 @einsum u[i,j] = _u[i]*∇ϕ[j]
                 @einsum ϵ[i,j] = 1/2*(u[i,j] + u[j,i])
                 @einsum σ[i,j] = E*ν/(1-ν^2)*δ[i,j]*ϵ[k,k] + E*ν*(1+ν)*ϵ[i,j]
-                for d in 1:dim
-                    ψ_e[(d-1)*dim+1:d*dim, (d-1)*dim+1:d*dim] .+= σ
-                    G[(dim*(d-1)+1):(dim*d), (a-1)*dim+d] .= ∇ϕ
+                for d in 1:xdim
+                    ψ_e[(d-1)*xdim+1:d*xdim, (d-1)*xdim+1:d*xdim] .+= σ
+                    G[(xdim*(d-1)+1):(xdim*d), (a-1)*xdim+d] .= ∇ϕ
                 end
             end
             Kσ_e .+= G'*ψ_e*G*dΩ

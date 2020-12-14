@@ -32,44 +32,44 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
 
     ##############################
     #! buckling
-    # import TrussTopOpt.TrussTopOptProblems: default_quad_order
-    # einfo = ElementFEAInfo(problem, TrussTopOpt.TrussTopOptProblems.default_quad_order(problem), Val{:Static})
-    # ginfo = GlobalFEAInfo(problem)
+    import TrussTopOpt.TrussTopOptProblems: default_quad_order
+    einfo = ElementFEAInfo(problem, TrussTopOpt.TrussTopOptProblems.default_quad_order(problem), Val{:Static})
+    ginfo = GlobalFEAInfo(problem)
 
-    # call solver to trigger assemble!
-    # solver()
-    # using TrussTopOpt.TrussTopOptProblems: buckling, get_Kσs
-    # buckling(problem, solver.globalinfo, solver.elementinfo)
+    ## call solver to trigger assemble!
+    solver()
+    using TrussTopOpt.TrussTopOptProblems: buckling, get_Kσs
+    buckling(problem, solver.globalinfo, solver.elementinfo)
 
     ##############################
 
     # TODO TopOpt.LogBarrier
     # TODO linear_elasticity, du/dx
     # * Compliance
-    obj = Objective(TopOpt.Compliance(problem, solver, filterT = nothing,
-        rmin = rmin, tracing = true, logarithm = false));
+    # obj = Objective(TopOpt.Compliance(problem, solver, filterT = nothing,
+    #     rmin = rmin, tracing = true, logarithm = false));
 
-    constr = Constraint(TopOpt.Volume(problem, solver, filterT = nothing, rmin = rmin), V);
+    # constr = Constraint(TopOpt.Volume(problem, solver, filterT = nothing, rmin = rmin), V);
 
-    mma_options = options = MMA.Options(maxiter = 3000,
-        tol = MMA.Tolerances(kkttol = 0.001))
-    convcriteria = MMA.KKTCriteria()
-    optimizer = MMAOptimizer(obj, constr, MMA.MMA87(),
-        ConjugateGradient(), options = mma_options,
-        convcriteria = convcriteria);
+    # mma_options = options = MMA.Options(maxiter = 3000,
+    #     tol = MMA.Tolerances(kkttol = 0.001))
+    # convcriteria = MMA.KKTCriteria()
+    # optimizer = MMAOptimizer(obj, constr, MMA.MMA87(),
+    #     ConjugateGradient(), options = mma_options,
+    #     convcriteria = convcriteria);
 
-    simp = SIMP(optimizer, penalty.p);
+    # simp = SIMP(optimizer, penalty.p);
 
-    # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape 
-    # from infeasible regions and return a result
-    x0 = fill(V, length(solver.vars))
-    result = simp(x0);
+    # # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape 
+    # # from infeasible regions and return a result
+    # x0 = fill(V, length(solver.vars))
+    # result = simp(x0);
 
-    println("="^10)
-    println("tim-$(problem_dim) - LC $(lc_ind) - #elements $(ncells), #dof: $(ncells*ndim): opt iter $(result.fevals)")
-    println("$(result.convstate)")
+    # println("="^10)
+    # println("tim-$(problem_dim) - LC $(lc_ind) - #elements $(ncells), #dof: $(ncells*ndim): opt iter $(result.fevals)")
+    # println("$(result.convstate)")
 
-    scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
-    # display(scene)
+    # scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
+    # # display(scene)
 
 # end # end testset
