@@ -1,5 +1,6 @@
 using Test
 using TopOpt
+using TopOpt.TopOptProblems: getE
 using TrussTopOpt
 using Makie
 using Base.Iterators
@@ -13,13 +14,13 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
     # file_name = "tim_$(problem_dim).json"
     problem_file = joinpath(ins_dir, file_name)
 
-    node_points, elements, Es, crosssecs, fixities, load_cases = parse_truss_json(problem_file);
+    node_points, elements, mats, crosssecs, fixities, load_cases = parse_truss_json(problem_file);
     loads = load_cases[string(lc_ind)]
 
-    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, fixities, Es, crosssecs);
+    problem = TrussProblem(Val{:Linear}, node_points, elements, loads, fixities, mats, crosssecs);
 
     ndim, nnodes, ncells = length(node_points[1]), length(node_points), length(elements)
-    @test problem.E == Es
+    @test getE(problem) == [m.E for m in mats]
 
     V = 0.3 # volume fraction
     xmin = 0.001 # minimum density
@@ -36,39 +37,39 @@ ins_dir = joinpath(@__DIR__, "instances", "ground_meshes");
     # ginfo = GlobalFEAInfo(problem)
 
     # call solver to trigger assemble!
-    solver()
-    using TrussTopOpt.TrussTopOptProblems: buckling, get_Kσs
-    buckling(problem, solver.globalinfo, solver.elementinfo)
+    # solver()
+    # using TrussTopOpt.TrussTopOptProblems: buckling, get_Kσs
+    # buckling(problem, solver.globalinfo, solver.elementinfo)
 
     ##############################
 
-    # TopOpt.LogBarrier
-    # linear_elasticity, du/dx
-    # Compliance
-    # obj = Objective(TopOpt.Compliance(problem, solver, filterT = nothing,
-    #     rmin = rmin, tracing = true, logarithm = false));
+    # TODO TopOpt.LogBarrier
+    # TODO linear_elasticity, du/dx
+    # * Compliance
+    obj = Objective(TopOpt.Compliance(problem, solver, filterT = nothing,
+        rmin = rmin, tracing = true, logarithm = false));
 
-    # constr = Constraint(TopOpt.Volume(problem, solver, filterT = nothing, rmin = rmin), V);
+    constr = Constraint(TopOpt.Volume(problem, solver, filterT = nothing, rmin = rmin), V);
 
-    # mma_options = options = MMA.Options(maxiter = 3000,
-    #     tol = MMA.Tolerances(kkttol = 0.001))
-    # convcriteria = MMA.KKTCriteria()
-    # optimizer = MMAOptimizer(obj, constr, MMA.MMA87(),
-    #     ConjugateGradient(), options = mma_options,
-    #     convcriteria = convcriteria);
+    mma_options = options = MMA.Options(maxiter = 3000,
+        tol = MMA.Tolerances(kkttol = 0.001))
+    convcriteria = MMA.KKTCriteria()
+    optimizer = MMAOptimizer(obj, constr, MMA.MMA87(),
+        ConjugateGradient(), options = mma_options,
+        convcriteria = convcriteria);
 
-    # simp = SIMP(optimizer, penalty.p);
+    simp = SIMP(optimizer, penalty.p);
 
-    # # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape 
-    # # from infeasible regions and return a result
-    # x0 = fill(V, length(solver.vars))
-    # result = simp(x0);
+    # ? 1.0 might induce an infeasible solution, which gives the optimizer a hard time to escape 
+    # from infeasible regions and return a result
+    x0 = fill(V, length(solver.vars))
+    result = simp(x0);
 
-    # println("="^10)
-    # println("tim-$(problem_dim) - LC $(lc_ind) - #elements $(ncells), #dof: $(ncells*ndim): opt iter $(result.fevals)")
-    # println("$(result.convstate)")
+    println("="^10)
+    println("tim-$(problem_dim) - LC $(lc_ind) - #elements $(ncells), #dof: $(ncells*ndim): opt iter $(result.fevals)")
+    println("$(result.convstate)")
 
-    # scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
-    # # display(scene)
+    scene, layout = draw_truss_problem(problem; crosssecs=result.topology)
+    # display(scene)
 
 # end # end testset

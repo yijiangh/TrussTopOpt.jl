@@ -23,7 +23,7 @@ TopOpt.TopOptProblems.getν(sp::TrussProblem) = [m.ν for m in sp.materials]
 getA(sp::TrussProblem) = [cs.A for cs in sp.truss_grid.crosssecs]
 
 function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
-    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, mats=TrussFmatsAMaterial{T}(1.0, 0.3), crosssecs=T(1.0)) where {xdim, T, iT, fT, CellType}
+    loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, mats=TrussFEAMaterial{T}(1.0, 0.3), crosssecs=TrussFEACrossSec{T}(1.0)) where {xdim, T, iT, fT, CellType}
     # unify number type
     # _T = promote_type(eltype(sizes), typeof(mats), typeof(ν), typeof(force))
     # if _T <: Integer

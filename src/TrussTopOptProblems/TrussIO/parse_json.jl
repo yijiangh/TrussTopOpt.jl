@@ -61,8 +61,8 @@ function parse_truss_json(file_path::String)
             A_from_tag[e_tag] = T(cs["A"])
         end
     end
-    mats = TrussFEAMaterial[]
-    crosssecs = TrussFEACrossSec[]
+    mats = Array{TrussFEAMaterial}(undef, m)
+    crosssecs = Array{TrussFEACrossSec}(undef, m)
     for (tag, e_ids) in element_inds_from_tag
         # @show tag, e_ids
         for ei in e_ids
@@ -72,7 +72,7 @@ function parse_truss_json(file_path::String)
             else
                 A = A_from_tag[tag]
             end
-            push!(crosssecs, TrussFEACrossSec(A))
+            crosssecs[ei] = TrussFEACrossSec(A)
 
             if !(tag ∈ keys(E_from_tag))
                 # use default material (key `nothing`)
@@ -86,7 +86,7 @@ function parse_truss_json(file_path::String)
             else
                 ν = ν_from_tag[tag]
             end
-            push!(mats, TrussFEAMaterial(E, ν))
+            mats[ei] = TrussFEAMaterial(E, ν)
         end
     end
 
