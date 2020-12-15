@@ -55,7 +55,7 @@ function buckling(problem::TrussProblem{xdim, T}, ginfo, einfo) where {xdim, T}
     dh = problem.ch.dh
 
     u = ginfo.K \ ginfo.f
-    Kσs = get_Kσs(problem, u, einfo.cellvalues)
+    @show Kσs = get_Kσs(problem, u, einfo.cellvalues)
     Kσ = deepcopy(ginfo.K)
 
     if Kσ isa Symmetric
