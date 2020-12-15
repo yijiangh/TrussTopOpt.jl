@@ -17,9 +17,10 @@ function draw_truss_problem(problem::TrussProblem; kwargs...)
 end
 
 function draw_truss_problem!(scene, layout, problem::TrussProblem;
-    crosssecs=nothing, stress=nothing, linewidth::Float64=6.0)
+    crosssecs=nothing, stress=nothing, linewidth::Float64=6.0, u=nothing)
     ndim = getdim(problem)
     ncells = JuAFEM.getncells(problem)
+    nnodes = JuAFEM.getnnodes(problem)
 
     if crosssecs !== nothing
         @assert(ncells == length(crosssecs))
@@ -83,6 +84,21 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
     linesegments!(ax1, edges_pts, 
                   linewidth = element_linewidth,
                   color = color)
+
+    # * draw displacements
+    if u !== nothing
+        node_dofs = problem.metadata.node_dofs
+        @assert length(u) == ndim * nnodes
+
+        exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:1000.0)
+        set_close_to!(exagg_ls.slider, 1.0)
+        exagg_edge_pts = lift(s -> [PtT(nodes[cell.nodes[1]].x) + PtT(u[node_dofs[:,cell.nodes[1]]]*s) => PtT(nodes[cell.nodes[2]].x) + PtT(u[node_dofs[:,cell.nodes[2]]]*s) for cell in problem.truss_grid.grid.cells], exagg_ls.slider.value)
+        layout[3, 1] = exagg_ls.layout
+
+        linesegments!(ax1, exagg_edge_pts, 
+                      linewidth = element_linewidth,
+                      color = :cyan)
+    end
 
     # fixties vectors
     for i=1:ndim

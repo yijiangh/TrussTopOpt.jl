@@ -21,6 +21,7 @@ getJuaFEMgrid(sp::TrussProblem) = sp.truss_grid.grid
 TopOpt.TopOptProblems.getE(sp::TrussProblem) = [m.E for m in sp.materials]
 TopOpt.TopOptProblems.getν(sp::TrussProblem) = [m.ν for m in sp.materials]
 getA(sp::TrussProblem) = [cs.A for cs in sp.truss_grid.crosssecs]
+JuAFEM.getnnodes(problem::StiffnessTopOptProblem) = JuAFEM.getnnodes(getdh(problem).grid)
 
 function TrussProblem(::Type{Val{CellType}}, node_points::Dict{iT, SVector{xdim, T}}, elements::Dict{iT, Tuple{iT, iT}}, 
     loads::Dict{iT, SVector{xdim, T}}, supports::Dict{iT, SVector{xdim, fT}}, mats=TrussFEAMaterial{T}(1.0, 0.3), crosssecs=TrussFEACrossSec{T}(1.0)) where {xdim, T, iT, fT, CellType}
