@@ -20,11 +20,11 @@ pkg> add https://github.com/yijiangh/JuAFEM.jl.git
 pkg> add https://github.com/yijiangh/Tensors.jl.git
 pkg> add https://github.com/mohamed82008/VTKDataTypes.jl#master
 pkg> add https://github.com/mohamed82008/KissThreading.jl#master
-pkg> add https://github.com/mohamed82008/TopOpt.jl#master
+pkg> add https://github.com/yijiangh/TopOpt.jl#master
 pkg> add https://github.com/yijiangh/TrussTopOpt.jl#master
 ```
 
-which will track the `master` branch of the package.
+which will track the `master` branch of the package. (we still need to use a fork of `TopOpt.jl` before these changes are merged.)
 
 To load the package, use
 
