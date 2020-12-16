@@ -43,6 +43,7 @@ function get_Kσs(problem::TrussProblem{xdim, TT}, dofs, cellvalues) where {xdim
                     G[(xdim*(d-1)+1):(xdim*d), (a-1)*xdim+d] .= ∇ϕ
                 end
             end
+            @show G
             Kσ_e .+= G'*ψ_e*G*dΩ
         end
         Kσs[cellidx] .= Kσ_e
@@ -55,6 +56,7 @@ function buckling(problem::TrussProblem{xdim, T}, ginfo, einfo) where {xdim, T}
     dh = problem.ch.dh
 
     u = ginfo.K \ ginfo.f
+    @show u
     @show Kσs = get_Kσs(problem, u, einfo.cellvalues)
     Kσ = deepcopy(ginfo.K)
 

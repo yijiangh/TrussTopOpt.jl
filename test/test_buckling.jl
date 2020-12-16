@@ -11,8 +11,8 @@ using TrussTopOpt.TrussTopOptProblems: getA, default_quad_order
 problem_json = ["buckling_2d_global_instab.json", "buckling_2d_nodal_instab.json"]
 ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
-# @testset "Truss problem solve - $(problem_json[i])" for i in 1:length(problem_json)
-    i = 2
+# @testset "Buckling problem solve - $(problem_json[i])" for i in 1:length(problem_json)
+    i = 1
     file_name = problem_json[i]
     problem_file = joinpath(ins_dir, file_name)
 
@@ -43,6 +43,7 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
     ##############################
     #! buckling
+    # https://juliamath.github.io/IterativeSolvers.jl/dev/eigenproblems/lobpcg/
     try
         using TrussTopOpt.TrussTopOptProblems: buckling, get_Kσs
         K, Kσ = buckling(problem, solver.globalinfo, solver.elementinfo)
@@ -60,6 +61,9 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
         scene, layout = draw_truss_problem(problem)
     end
 
-    # TODO eigenmode
+    # TODO eigenmode to show global instability mode
+    # TODO finite difference to verify the gradientj
+    # TODO verify the gradient for some analytical problems
+    # TODO "manual" interior point loop, adjusting the c value every iter
 
 # end # end test set
