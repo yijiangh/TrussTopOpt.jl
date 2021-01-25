@@ -1,5 +1,5 @@
-using AbstractPlotting: linesegments!, Point2f0, Point3f0
 using AbstractPlotting.MakieLayout
+using AbstractPlotting: linesegments!, Point2f0, Point3f0
 using Makie
 using TopOpt.TopOptProblems: getdim
 using TrussTopOpt.TrussTopOptProblems: TrussProblem, get_fixities_node_set_name
@@ -49,7 +49,7 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
     edges_pts = [PtT(nodes[cell.nodes[1]].x) => PtT(nodes[cell.nodes[2]].x) for cell in problem.truss_grid.grid.cells]
 
     if ndim == 2
-        ax1 = layout[1, 1] = LAxis(scene)
+        ax1 = layout[1, 1] = Axis(scene)
         # tightlimits!(ax1)
         # ax1.aspect = AxisAspect(1)
         ax1.aspect = DataAspect()
@@ -58,7 +58,7 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
         # https://makie.juliaplots.org/stable/cameras.html#D-Camera
         ax1 = layout[1, 1] = LScene(scene, camera = cam3d!, raw = false)
     end
-    # TODO show the ground mesh in another LAxis https://makie.juliaplots.org/stable/makielayout/grids.html
+    # TODO show the ground mesh in another Axis https://makie.juliaplots.org/stable/makielayout/grids.html
     # ax1.title = "Truss TopOpt result"
 
     # sl1 = layout[2, 1] = LSlider(scene, range = 0.01:0.01:10, startvalue = 1.0)
