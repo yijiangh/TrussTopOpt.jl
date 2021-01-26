@@ -48,6 +48,7 @@ function get_Kσs(problem::TrussProblem{xdim, TT}, u_dofs, cellvalues) where {xd
                 # @einsum σ[i,j] = E*ν/(1-ν^2)*δ[i,j]*ϵ[k,k] + E*ν*(1+ν)*ϵ[i,j]
                 # ! truss element special treatment here
                 σ = E .* ϵ
+                
                 for d in 1:xdim
                     ψ_e[(d-1)*xdim+1:d*xdim, (d-1)*xdim+1:d*xdim] .+= σ
                     G[(xdim*(d-1)+1):(xdim*d), (a-1)*xdim+d] .= ∇ϕ
@@ -91,6 +92,9 @@ function buckling(problem::TrussProblem{xdim, T}, ginfo, einfo) where {xdim, T}
             JuAFEM.assemble!(assembler, global_dofs, Kσs[i])
         end
     end
+
+    # f = copy(ginfo.f)
+    # apply!(Kσ, f, problem.ch)
 
     return ginfo.K, Kσ
 end

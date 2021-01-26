@@ -90,7 +90,8 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
         node_dofs = problem.metadata.node_dofs
         @assert length(u) == ndim * nnodes
 
-        exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:1000.0)
+        # exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:1000.0)
+        exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:10.0)
         set_close_to!(exagg_ls.slider, 1.0)
         exagg_edge_pts = lift(s -> [PtT(nodes[cell.nodes[1]].x) + PtT(u[node_dofs[:,cell.nodes[1]]]*s) => PtT(nodes[cell.nodes[2]].x) + PtT(u[node_dofs[:,cell.nodes[2]]]*s) for cell in problem.truss_grid.grid.cells], exagg_ls.slider.value)
         layout[3, 1] = exagg_ls.layout

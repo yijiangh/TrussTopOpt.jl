@@ -12,11 +12,11 @@ using IterativeSolvers
 using Arpack
 using Crayons.Box
 
-problem_json = ["buckling_2d_global_instab.json", "buckling_2d_nodal_instab.json"]
+problem_json = ["buckling_2d_nodal_instab.json", "buckling_2d_global_instab.json"]
 ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
 # @testset "Buckling problem solve - $(problem_json[i])" for i in 1:length(problem_json)
-    i = 1
+    i = 2
     file_name = problem_json[i]
     problem_file = joinpath(ins_dir, file_name)
 
@@ -42,7 +42,7 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     # call solver to trigger assemble!
     solver()
     @show solver.u
-    # scene, layout = draw_truss_problem(problem; u=solver.u)
+    scene, layout = draw_truss_problem(problem; u=solver.u)
 
     try
         global K, Kσ = buckling(problem, solver.globalinfo, solver.elementinfo)
@@ -50,7 +50,7 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
         println(RED_BG("ERROR: "))
         println(err)
         if isa(err, SingularException)
-            println(RED_FG("Linear elasticity solve failed."))
+            println(RED_FG("Linear elasticity solve failed due to mechanism."))
             K_l = solver.globalinfo.K
             # TODO: use sparse eigen
             # λ, ϕ = eigs(K.data, nev = 2, which=:SM);
@@ -58,40 +58,51 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
             # @show ϕ
 
             # ? is this ordered by eigen values' magnitude?
-            F = eigen(Array(K_l))
+            local F = eigen(Array(K_l))
             @show F
-            # @assert abs(F.values[1] - 0.0) < eps()
+            @assert abs(F.values[1] - 0.0) < eps()
 
             # * draw eigen mode
-            # scene, layout = draw_truss_problem(problem; u=F.vectors[:,1])
+            scene, layout = draw_truss_problem(problem; u=F.vectors[:,1])
         end
+        throw(err)
     end
+    # the linear elastic model must be solved successfully to proceed on buckling calculation
     println(GREEN_FG("Linear elasticity solved."))
 
+    ch = problem.ch
+    C = zeros(size(K, 1), length(ch.prescribed_dofs))
+    setindex!.(Ref(C), 1, ch.prescribed_dofs, 1:length(ch.prescribed_dofs))
+
     # Find the maximum eigenvalue of system Kσ x = 1/λ K x
+    # The reason we do it this way is because K is guaranteed to be positive definite while Kσ is not and the LOBPCG algorithm to find generalised eigenvalues requires the matrix on the RHS to be positive definite.
     # https://julialinearalgebra.github.io/IterativeSolvers.jl/stable/eigenproblems/lobpcg/
-    r = lobpcg(Kσ.data, K.data, true, 1)
+    c = norm(K)
+    r = lobpcg(Kσ.data ./ c, K.data ./ c, true, 1; C=C)
 
-    # # Minimum eigenvalue of the system K x = λ Kσ x
-    @show λ = 1/r.λ[1]
+    # # Minimum eigenvalue of the system K x + λ Kσ x = 0
+    @show λ = -1/r.λ[1]
+    @show v = r.X
 
-    F = eigen(Array(Kσ), Array(K))
+    scene, layout = draw_truss_problem(problem; u=v)
+
+    # F = eigen(Array(Kσ), Array(K))
     # F = eigen(Array(K), Array(Kσ))
-    @show 1 ./ F.values
+    # @show - 1 ./ F.values
 
-    # if 0 < λ && λ < 1
+    if 0 < λ && λ < 1
         # 0 < λ_min < 1 means that the equilibrium equation with load 
         # λ*f is not solvable for some 0 < λ < 1 and the structure under load
         # f is not stable
 
         # s = 1.0
-        # Ks = K .+ λ .* Kσ
+        Ks = K .+ λ .* Kσ
 
-        # eigen_vals, eigen_vecs = eigs(K, nev = 2, which=:SM);
-        # @show eigen_vals
-        # @show eigen_vecs
-        # F = eigen(Array(K))
-        # @show F
+        eigen_vals, eigen_vecs = eigs(Ks, nev = 2, which=:SM);
+        @show eigen_vals
+        @show eigen_vecs
+        local F = eigen(Array(Ks))
+        @show F
 
         # cholKs = cholesky(Symmetric(Ks))
         # u_b = cholKs \ solver.globalinfo.f
@@ -100,9 +111,23 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
         ## TODO plot analysis result with
         # scene, layout = draw_truss_problem(problem; u=u_b)
         # println("End")
-    # end
+    end
 
     # TODO eigenmode to show global instability mode
+    # ? what does MMA need? Inner opt uses MMA or SIMP?
+    #  - where to plug in the gradient of the barrier function?
+        # function (v::Volume{T})(x, grad = nothing) where {T}
+    #  - how to compute ∂K/∂x_e and ∂f/∂x_e?
+            # d = ForwardDiff.Dual{T}(x[varind[i]], one(T))
+            # if PENALTY_BEFORE_INTERPOLATION
+            #     p = density(penalty(d), xmin)
+            # else
+            #     p = penalty(density(d, xmin))
+            # end
+            # grad[varind[i]] = -p.partials[1] * cell_comp[i] # Ke
+    #  adjoint method: ∂u/∂x_e = K^{-1} * (∂f/∂x_e - ∂K/∂x_e * u)
+    # ∂Kσ/∂x_e for all e
+
     # TODO finite difference to verify the gradient
     # TODO verify the gradient for some analytical problems
     # TODO "manual" interior point loop, adjusting the c value every iter
