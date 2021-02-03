@@ -12,11 +12,11 @@ using IterativeSolvers
 using Arpack
 using Crayons.Box
 
-problem_json = ["buckling_2d_nodal_instab.json", "buckling_2d_global_instab.json"]
+problem_json = ["buckling_2d_nodal_instab.json", "buckling_2d_global_instab.json", "buckling_2d_debug.json"]
 ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
 # @testset "Buckling problem solve - $(problem_json[i])" for i in 1:length(problem_json)
-    i = 2
+    i = 3
     file_name = problem_json[i]
     problem_file = joinpath(ins_dir, file_name)
 
@@ -26,23 +26,23 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
 
     problem = TrussProblem(Val{:Linear}, node_points, elements, loads, fixities, mats, crosssecs);
 
-    @test getdim(problem) == ndim
-    @test JuAFEM.getncells(problem) == ncells
-    @test getE(problem) == [m.E for m in mats]
-    @test problem.black == problem.white == falses(ncells)
-    @test problem.force == loads
-    @test problem.varind == 1:ncells
-    grid = problem.ch.dh.grid
-    @test length(grid.cells) == ncells
-
-    @test getgeomorder(problem) == 1
-    @test nnodespercell(problem) == 2
+    # @test getdim(problem) == ndim
+    # @test JuAFEM.getncells(problem) == ncells
+    # @test getE(problem) == [m.E for m in mats]
+    # @test problem.black == problem.white == falses(ncells)
+    # @test problem.force == loads
+    # @test problem.varind == 1:ncells
+    # grid = problem.ch.dh.grid
+    # @test length(grid.cells) == ncells
+    # @test getgeomorder(problem) == 1
+    # @test nnodespercell(problem) == 2
 
     solver = FEASolver(Displacement, Direct, problem)
     # call solver to trigger assemble!
     solver()
     @show solver.u
-    scene, layout = draw_truss_problem(problem; u=solver.u)
+    scene, layout = draw_truss_problem(problem; u=solver.u, 
+        default_load_scale=0.2, default_support_scale=0.2, default_arrow_size=0.03)
 
     try
         global K, Kσ = buckling(problem, solver.globalinfo, solver.elementinfo)
@@ -73,18 +73,22 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     ch = problem.ch
     C = zeros(size(K, 1), length(ch.prescribed_dofs))
     setindex!.(Ref(C), 1, ch.prescribed_dofs, 1:length(ch.prescribed_dofs))
+    # C = hcat(C, solver.u)
 
     # Find the maximum eigenvalue of system Kσ x = 1/λ K x
     # The reason we do it this way is because K is guaranteed to be positive definite while Kσ is not and the LOBPCG algorithm to find generalised eigenvalues requires the matrix on the RHS to be positive definite.
     # https://julialinearalgebra.github.io/IterativeSolvers.jl/stable/eigenproblems/lobpcg/
     c = norm(K)
-    r = lobpcg(Kσ.data ./ c, K.data ./ c, true, 1; C=C)
+    # r = lobpcg(Kσ.data, K.data, true, 1; C=C)
+    r = lobpcg(Kσ.data, K.data, true, 1)
+    @show r
 
     # # Minimum eigenvalue of the system K x + λ Kσ x = 0
     @show λ = -1/r.λ[1]
     @show v = r.X
 
-    scene, layout = draw_truss_problem(problem; u=v)
+    scene, layout = draw_truss_problem(problem; u=v, default_exagg=1.0, exagg_range=10.0,
+        default_load_scale=0.2, default_support_scale=0.2, default_arrow_size=0.03)
 
     # F = eigen(Array(Kσ), Array(K))
     # F = eigen(Array(K), Array(Kσ))
@@ -114,6 +118,7 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     end
 
     # TODO eigenmode to show global instability mode
+    # Find a test case for verifying the geometric stiffness matrix
     # ? what does MMA need? Inner opt uses MMA or SIMP?
     #  - where to plug in the gradient of the barrier function?
         # function (v::Volume{T})(x, grad = nothing) where {T}
@@ -133,3 +138,5 @@ ins_dir = joinpath(@__DIR__, "instances", "fea_examples");
     # TODO "manual" interior point loop, adjusting the c value every iter
 
 # end # end test set
+
+# =#

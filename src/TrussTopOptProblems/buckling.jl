@@ -63,12 +63,16 @@ function get_Kσs(problem::TrussProblem{xdim, TT}, u_dofs, cellvalues) where {xd
     return Kσs
 end
 
-function buckling(problem::TrussProblem{xdim, T}, ginfo, einfo) where {xdim, T}
+function buckling(problem::TrussProblem{xdim, T}, ginfo, einfo; u=undef) where {xdim, T}
     dh = problem.ch.dh
 
-    u = ginfo.K \ ginfo.f
+    if u === undef
+        u = ginfo.K \ ginfo.f
+    end
     Kσs = get_Kσs(problem, u, einfo.cellvalues)
     Kσ = deepcopy(ginfo.K)
+
+    # @show Kσs
 
     if Kσ isa Symmetric
         Kσ.data.nzval .= 0

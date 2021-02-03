@@ -17,7 +17,8 @@ function draw_truss_problem(problem::TrussProblem; kwargs...)
 end
 
 function draw_truss_problem!(scene, layout, problem::TrussProblem;
-    crosssecs=nothing, stress=nothing, linewidth::Float64=6.0, u=nothing)
+    crosssecs=nothing, stress=nothing, linewidth::Float64=6.0, u=nothing, 
+    default_exagg=1.0, exagg_range=10.0, default_support_scale=1.0, default_load_scale=1.0, default_arrow_size=0.3)
     ndim = getdim(problem)
     ncells = JuAFEM.getncells(problem)
     nnodes = JuAFEM.getnnodes(problem)
@@ -49,6 +50,7 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
     edges_pts = [PtT(nodes[cell.nodes[1]].x) => PtT(nodes[cell.nodes[2]].x) for cell in problem.truss_grid.grid.cells]
 
     if ndim == 2
+        # This was: ax1 = layout[1, 1] = LAxis(scene)
         ax1 = layout[1, 1] = Axis(scene)
         # tightlimits!(ax1)
         # ax1.aspect = AxisAspect(1)
@@ -69,9 +71,9 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
         # width = 350,
         tellheight = false,
     )
-    set_close_to!(lsgrid.sliders[1], 1.0)
-    set_close_to!(lsgrid.sliders[2], 1.0)
-    set_close_to!(lsgrid.sliders[3], 0.2)
+    set_close_to!(lsgrid.sliders[1], default_support_scale)
+    set_close_to!(lsgrid.sliders[2], default_load_scale)
+    set_close_to!(lsgrid.sliders[3], default_arrow_size)
     set_close_to!(lsgrid.sliders[4], 6.0)
     set_close_to!(lsgrid.sliders[5], 6.0)
     arrow_size = lift(s -> s, lsgrid.sliders[3].value)
@@ -91,8 +93,8 @@ function draw_truss_problem!(scene, layout, problem::TrussProblem;
         @assert length(u) == ndim * nnodes
 
         # exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:1000.0)
-        exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:10.0)
-        set_close_to!(exagg_ls.slider, 1.0)
+        exagg_ls = labelslider!(scene, "deformation exaggeration:", 0:0.01:exagg_range)
+        set_close_to!(exagg_ls.slider, default_exagg)
         exagg_edge_pts = lift(s -> [PtT(nodes[cell.nodes[1]].x) + PtT(u[node_dofs[:,cell.nodes[1]]]*s) => PtT(nodes[cell.nodes[2]].x) + PtT(u[node_dofs[:,cell.nodes[2]]]*s) for cell in problem.truss_grid.grid.cells], exagg_ls.slider.value)
         layout[3, 1] = exagg_ls.layout
 

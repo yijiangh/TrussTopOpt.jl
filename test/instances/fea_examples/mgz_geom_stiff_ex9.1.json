@@ -1,8 +1,10 @@
 {
+ "node_num": 3, 
+ "element_num": 2, 
  "unit": "meter", 
  "materials": [
   {
-   "E": 2000.0, 
+   "E": 200000000, 
    "name": "DummyMaterial", 
    "family": "DummyMaterial", 
    "elem_tags": [], 
@@ -11,33 +13,26 @@
   }
  ], 
  "dimension": 2, 
- "generate_time": "12/15/2020 07:30", 
+ "generate_time": "2/2/2021 17:13", 
  "elements": [
   {
    "end_node_inds": [
     0, 
     1
    ], 
-   "elem_tag": ""
-  }, 
-  {
-   "end_node_inds": [
-    0, 
-    2
-   ], 
-   "elem_tag": ""
+   "elem_tag": "ab"
   },
   {
    "end_node_inds": [
-    0, 
-    3
+    1, 
+    2
    ], 
-   "elem_tag": ""
+   "elem_tag": "bc"
   }
  ], 
  "supports": [
   {
-   "node_ind": 1, 
+   "node_ind": 0, 
    "condition": [
     1, 
     1
@@ -49,29 +44,19 @@
     1, 
     1
    ]
-  },
-  {
-   "node_ind": 3, 
-   "condition": [
-    1, 
-    0
-   ]
   }
  ], 
- "node_num": 4, 
  "TO_model_type": "buckling_analysis", 
- "_info": "Adapted from doi:10.1016/j.ijsolstr.2014.03.003.", 
- "model_name": "global_instab_2d", 
- "element_num": 3, 
+ "model_name": "MGZ p.247", 
  "model_type": "truss", 
  "loadcases": {
   "0": {
    "ploads": [
     {
-     "node_ind": 3, 
+     "node_ind": 1, 
      "force": [
-      0,
-      -1.0
+      1,
+      -1
      ], 
      "loadcase": 0, 
      "force_unit": "kN"
@@ -82,10 +67,20 @@
  }, 
  "cross_secs": [
   {
-   "A": 0.006,
+   "A": 0.000002,
    "name": "", 
    "family": "", 
    "elem_tags": [
+       "ab"
+   ], 
+   "A_unit": "m2"
+  },
+  {
+   "A": 0.005,
+   "name": "", 
+   "family": "", 
+   "elem_tags": [
+       "bc"
    ], 
    "A_unit": "m2"
   }
@@ -95,28 +90,21 @@
    "node_ind": 0, 
    "point": [
     0.0, 
-    1.0
+    4.0
    ]
   }, 
   {
    "node_ind": 1, 
    "point": [
-    0.0, 
-    0.0
-   ]
-  }, 
-  {
-   "node_ind": 2, 
-   "point": [
-    1.0, 
-    1.0
+    4.0, 
+    4.0
    ]
   },
   {
-   "node_ind": 3, 
+   "node_ind": 2,
    "point": [
-    0.0, 
-    2.0
+    4.0, 
+    0.0
    ]
   }
  ]
